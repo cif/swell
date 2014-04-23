@@ -1,0 +1,71 @@
+{
+  "name": "New Swell App",
+  "about": "About the awesome application",
+  "author": "you@email.com",
+  "version": "0.0.1",
+  "coffee": {
+    "compiler": "coffee",
+    "folders": [
+      {
+        "swell": "swell/client"
+      },
+      {
+        "models": "models"
+      },
+      {
+        "": "app"
+      }
+    ],
+    "output": "public/js/app.js",
+    "extensions":[".coffee"]
+  },
+  "templates": {
+    "compiler": "dust",
+    "folders": "views",
+    "output": "public/js/tmpl.js",
+    "extensions":[".dust"]
+  },
+  "style": {
+    "compiler": "less",
+    "folders": "style",
+    "output": "public/styles.css",
+    "extensions":[".less"]
+  },
+  "deps": {
+    "compiler" : "deps",
+    "folders": "vendor",
+    "output": "public/js/deps.js",
+    "extensions":[".js"]
+  },
+  "production": "public/js/production.js",
+  "server": {
+    "routes": {
+      "/": "Application.index"
+    },
+    "resources": {},
+    "coffee": {
+      "compiler": "coffee",
+      "folders": [
+        {
+          "swell": "swell/server"
+        },
+        {
+          "models": "models"
+        },
+        {
+          "responders": "responders"
+        }
+        
+      ],
+      "output": "server/swell.js",
+      "extensions":[".coffee"]
+    },
+    "views":"views",
+    "port": "3030",
+    "cookie_hash" : "cookie-hash-you-should-change",
+    "cookie_secret" : "cookie-secret-you-should-change",
+    "socket_io" : {
+      "log level": 1
+    }
+  }
+}

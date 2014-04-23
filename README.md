@@ -1,4 +1,4 @@
-flint-express
+swell
 =============
 
 Isomorphic development with coffeescript
