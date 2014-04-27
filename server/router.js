@@ -88,6 +88,8 @@
        
        form.parse(req, function(err, fields, files) {
          
+         console.log(req.query);
+         
          if(err) render.out(new Error('[swell-router] failed to parse request body: ' + err.getMessage()), false, false, res);
          
          // get parsed data
@@ -98,8 +100,8 @@
          
          // extend query parameters but dont override post data
          for(obj in req.query){
-           if(!data.hasOwnProperty(obj)){
-             data[obj] = req.query[obj];
+           if(!req.data.hasOwnProperty(obj)){
+             req.data[obj] = req.query[obj];
            }
          }
          

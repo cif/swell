@@ -6,3 +6,18 @@
 class Example extends swell.Model
   
   idAttribute: '_id'
+  
+  fields:
+    name:
+      type: 'string'
+      not_empty: true
+      not: 'bad'
+      message: 'Custom description validation message'
+    color:
+      type: 'string'
+      length: 7
+    sort_order:
+      type: 'number'
+      length: 7
+    
+        

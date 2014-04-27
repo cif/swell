@@ -44,7 +44,7 @@ class Collection
       callback(null, res)
   
   # query allows for find options
-  query: (options, callback) =>
+  where: (options, callback) =>
     @db.find options, callback
   
   # retrieve a single record by id
@@ -53,6 +53,8 @@ class Collection
     
   # add saves a new model
   add: (data, callback) =>
+    # instantiate the model instance before storage for validation
+    @model = new @model @
     @db.insert data, callback
   
   # update updates an existing model

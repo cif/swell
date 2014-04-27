@@ -1,4 +1,4 @@
-// last compiled: 2014-04-26 19:04:12
+// last compiled: 2014-04-26 21:04:93
 
 var swell = {};
 var models = {};
@@ -17,7 +17,7 @@ swell.Collection = (function() {
     this.update = __bind(this.update, this);
     this.add = __bind(this.add, this);
     this.get = __bind(this.get, this);
-    this.query = __bind(this.query, this);
+    this.where = __bind(this.where, this);
     this.fetch = __bind(this.fetch, this);
     var _this = this;
     this.data = config.server.resources[this.resource];
@@ -53,7 +53,7 @@ swell.Collection = (function() {
     });
   };
 
-  Collection.prototype.query = function(options, callback) {
+  Collection.prototype.where = function(options, callback) {
     return this.db.find(options, callback);
   };
 
@@ -62,6 +62,7 @@ swell.Collection = (function() {
   };
 
   Collection.prototype.add = function(data, callback) {
+    this.model = new this.model(this);
     return this.db.insert(data, callback);
   };
 
@@ -511,7 +512,7 @@ swell.Mongo = (function() {
 
   function Mongo(collection) {
     this.collection = collection;
-    this.close_connection = __bind(this.close_connection, this);
+    this.valid_id = __bind(this.valid_id, this);
     this.bump = __bind(this.bump, this);
     this.destroy = __bind(this.destroy, this);
     this.update = __bind(this.update, this);
@@ -523,10 +524,14 @@ swell.Mongo = (function() {
   }
 
   Mongo.prototype.find = function(options, callback) {
+    if (options.id) delete options.id;
     return this.db[this.collection.store].find(options).sort(this.collection.sort_by, callback);
   };
 
   Mongo.prototype.get = function(id, callback) {
+    if (!this.valid_id(id)) {
+      callback('[swell-mongo] bad object id argument: ' + id);
+    }
     return this.db[this.collection.store].findOne({
       _id: mongo.ObjectId(id)
     }, callback);
@@ -541,6 +546,9 @@ swell.Mongo = (function() {
   };
 
   Mongo.prototype.destroy = function(object, callback) {
+    if (!this.valid_id(id)) {
+      callback('[swell-mongo] bad object id argument: ' + id);
+    }
     return this.db[this.collection.store].remove({
       _id: mongo.ObjectId(object.id)
     }, callback);
@@ -548,8 +556,8 @@ swell.Mongo = (function() {
 
   Mongo.prototype.bump = function(store, field, value, key, id, callback) {};
 
-  Mongo.prototype.close_connection = function() {
-    return this.connection.end();
+  Mongo.prototype.valid_id = function(id) {
+    return id.match('^[0-9a-fA-F]{24}$');
   };
 
   return Mongo;
@@ -765,25 +773,24 @@ swell.Responder = (function() {
     this.put = __bind(this.put, this);
     this.post = __bind(this.post, this);
     this.get = __bind(this.get, this);
-    this.finish = __bind(this.finish, this);
     this.after = __bind(this.after, this);
     this.before = __bind(this.before, this);
     this.init.apply(this, arguments);
     this;
   }
 
-  Responder.prototype.init = function() {};
+  Responder.prototype.init = function(config) {
+    this.config = config;
+    return this;
+  };
 
   Responder.prototype.before = function(request) {
     return true;
   };
 
   Responder.prototype.after = function(request) {
-    this.finish();
     return true;
   };
-
-  Responder.prototype.finish = function() {};
 
   Responder.prototype.get = function(request, callback) {
     var _this = this;
@@ -862,6 +869,24 @@ models.Example = (function() {
 
   Example.prototype.idAttribute = '_id';
 
+  Example.prototype.fields = {
+    name: {
+      type: 'string',
+      valid: 'not_empty',
+      not_empty: true,
+      not: 'bad',
+      message: 'Custom description validation message'
+    },
+    color: {
+      type: 'string',
+      length: 7
+    },
+    sort_order: {
+      type: 'number',
+      length: 7
+    }
+  };
+
   return Example;
 
 })();
@@ -883,6 +908,8 @@ collections.Examples = (function() {
 
   Examples.prototype.sort_by = 'sort_order';
 
+  Examples.prototype.list = ['_id', 'name'];
+
   return Examples;
 
 })();
@@ -891,7 +918,7 @@ responders.Examples = (function() {
   __extends(Examples, swell.Responder);
 
   function Examples() {
-    this.colored = __bind(this.colored, this);
+    this.colors = __bind(this.colors, this);
     Examples.__super__.constructor.apply(this, arguments);
   }
 
@@ -899,11 +926,11 @@ responders.Examples = (function() {
 
   Examples.prototype.expose_rest = true;
 
-  Examples.prototype.colored = function(request, callback) {
+  Examples.prototype.colors = function(request, callback) {
     var _this = this;
     return new this.collection(this.config, function(err, collection) {
       _this.collection = collection;
-      return _this.collection.query({
+      return _this.collection.where({
         color: request.data.color
       }, callback);
     });

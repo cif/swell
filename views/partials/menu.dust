@@ -7,7 +7,9 @@
     *    <a href="#routes">Middleware</a>
     *    <a href="#routes">Routes</a>
     *    <a href="#responders">Responders</a>
-    *    <a href="#rest">Data Sources</a>
+    *    <a href="#collections">Collections</a>
+    *    <a href="#models">Models</a>
+    *    <a href="#rest">Data</a>
     *    <a href="#rest">REST</a>
     *    <a href="#views">Views</a>
 *    <a href="/page/client" {@eq key="client" value=view}class="selected"{/eq}>Client</a>

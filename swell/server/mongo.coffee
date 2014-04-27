@@ -15,10 +15,12 @@ class Mongo
       
   # find records
   find: (options, callback) =>
-   @db[@collection.store].find(options).sort @collection.sort_by, callback
+    delete options.id if options.id
+    @db[@collection.store].find(options).sort @collection.sort_by, callback
     
   # get a single record by id  
   get: (id, callback) =>
+    callback('[swell-mongo] bad object id argument: ' + id) if !@valid_id(id)
     @db[@collection.store].findOne _id:mongo.ObjectId(id), callback
     
   # insert new records
@@ -31,10 +33,13 @@ class Mongo
   
   # delete a record
   destroy: (object, callback) =>
+    callback('[swell-mongo] bad object id argument: ' + id) if !@valid_id(id)
     @db[@collection.store].remove _id:mongo.ObjectId(object.id), callback
     
   # increment / decrement
   bump: (store, field, value, key, id, callback) =>
+  
+  valid_id: (id) =>
+    id.match('^[0-9a-fA-F]{24}$')
     
-  close_connection: =>
-    @connection.end()
+  

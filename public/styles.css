@@ -151,6 +151,7 @@ section[role=main] .flow a {
   line-height: 15px;
 }
 section[role=main] pre {
+  line-height: 18px;
   padding: 10px;
   font-size: 11px;
   -webkit-border-radius: 5px;

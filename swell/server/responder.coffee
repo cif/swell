@@ -17,22 +17,18 @@ class Responder
     @init.apply(@, arguments)  
     this
   
-  init: ->
+  init: (@config) ->
+    this
     
   before: (request) =>
     true
     
   after: (request) =>
-    @finish()
     true
     
-  # wraps up any last details
-  finish: =>  
-  
-  # generic implementations of get, post, put and delete
-  # the request methods are 
+  # generic implementations of rest crud
+  # methods are mapped from request type
   get: (request, callback) =>
-    # make sure we can do this
     callback(null, unauthorized:true) if !@expose_rest
     callback('[swell] A collection must specified to use REST features') if !@collection
     
@@ -44,10 +40,6 @@ class Responder
       else  
         @collection.fetch(callback)
         
-      # callback(null, wtf:'woot!')
-      
-    # callback(null, hi:'there')
-      
   post: (request, callback) =>
     callback(null, unauthorized:true) if !@expose_rest
     new @collection @config, (err, @collection) =>
@@ -62,6 +54,7 @@ class Responder
     callback(null, unauthorized:true) if !@expose_rest
     new @collection @config, (err, @collection) =>
       @collection.remove request.data, callback
+  
       
   # misc responder helper methods
   # so far cookie is the only one

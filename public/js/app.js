@@ -1,4 +1,4 @@
-// last compiled: 2014-04-26 19:04:97
+// last compiled: 2014-04-26 21:04:91
 
 var swell = {};
 var models = {};
@@ -393,6 +393,23 @@ models.Example = (function() {
 
   Example.prototype.idAttribute = '_id';
 
+  Example.prototype.fields = {
+    name: {
+      type: 'string',
+      not_empty: true,
+      not: 'bad',
+      message: 'Custom description validation message'
+    },
+    color: {
+      type: 'string',
+      length: 7
+    },
+    sort_order: {
+      type: 'number',
+      length: 7
+    }
+  };
+
   return Example;
 
 })();
@@ -414,6 +431,8 @@ collections.Examples = (function() {
 
   Examples.prototype.sort_by = 'sort_order';
 
+  Examples.prototype.list = ['_id', 'name'];
+
   return Examples;
 
 })();
@@ -425,9 +444,7 @@ routers.Application = (function() {
     Application.__super__.constructor.apply(this, arguments);
   }
 
-  Application.prototype.initialize = function() {
-    return console.log('hi!');
-  };
+  Application.prototype.initialize = function() {};
 
   return Application;
 

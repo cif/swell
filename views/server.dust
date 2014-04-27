@@ -64,8 +64,37 @@ There are two ways in which requests are routed to a responder object method (lo
 
 ### Responders
 
-Responders are the javascript objects (compiled from coffescript files by default) which are instantiated and called by router.js. Each method takes two arguments, *request* and *callback*. The request is basically the raw req object from the express route with multipart and query data stored in a special **request.data** parameter  
+Responders are the javascript objects (usually compiled from coffescript) which are instantiated and called by router.js. Each responder method takes two arguments, *request* and *callback*. The request is basically the raw req object from the express route with multipart and query data stored in a special **request.data** parameter. The callback method arguments (*err*, *data*, *emit*) are then passed onto render.js and socket.js (if applicable).
+
+Here is a simple example router "Example" (written in coffeescript):
+
+    class Examples extends swell.Responder
+  
+      collection: collections.Examples
+      expose_rest: true
+  
+      colored: (request, callback) =>
+        new @collection @config, (err, @collection) =>
+          @collection.query color:request.data.color, callback 
+
+In this example, a GET request to */examples/color/?color=red* would return a list of examples matching color:'red'. Additional methods can be created and will map automatically. Responder classes are all compiled into **server/swell.js**. When watching, changes will be reflected in each new request made to the server.
 
 
+### Collections
+
+Collection objects are the primary objects your responders will interact with. swell.Collection (server) methods are similar to Backbone.js on the client: **fetch, where, get, add, update,** and **remove**.  Additionaly, collection objects have a few shortcut properties which allow faster list loading, simple sorting and more.  Keep in mind that your collections are **shared by the client** so be careful not to override methods or properties found in [Backbone.Collection](http://backbonejs.org/#Collection)
+
+Here is an example collection "Examples" (written in coffeescript):
+
+    class Examples extends swell.Collection
+  
+      model: models.Example
+      url: '/examples/'
+      resource:'mongo'
+      store: 'examples'
+      sort_by: 'sort_order'
+      list: ['_id','name']
+     
+     
 _____________
 {>"partials/credit"/}
