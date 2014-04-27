@@ -15,7 +15,7 @@
   var fs = require('fs');
   var coffeescript = require('coffee-script');
   var moment = require('moment');
-  var compile = function(file, namespace, callback){
+  var compile = function(file, namespace, callback, config){
     
     try{
       
@@ -41,15 +41,16 @@
     
   }
   
-  var header = function(namespaces){
+  var header = function(namespaces, config){
     
     var out = [];
         out.push('// last compiled: ' + moment().format('YYYY-MM-DD HH:MM:SS'));
-        out.push('// exports is only used by the compiled node service.');
-        out.push('// please excuse the implicit declaration used (for now).');
+        out.push('');
         
-    for(var n = 0; n < namespaces.length; n++)  // namespace objects 
-      out.push(namespaces[n].replace(/\//,'') + ' = {};');
+    for(var n = 0; n < namespaces.length; n++){  // namespace objects 
+      var _var = namespaces[n].split('.').length > 1 ? '    ' : 'var ';
+      out.push(_var + namespaces[n].replace(/\//,'') + ' = {};');
+    }
     
     out.push('');
     out.push('__bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },');
@@ -61,11 +62,12 @@
     
   }
   
-  var footer = function(namespaces){
-    
+  var footer = function(namespaces, config){
+    if(!config.exports) return '';
     var out = [];
-    for(var n = 0; n < namespaces.length; n++)  // namespace objects 
+    for(var n = 0; n < namespaces.length; n++){  // namespace objects 
       out.push('exports.' + namespaces[n].replace(/\//,'') + ' = ' + namespaces[n].replace(/\//,'') + ';');
+    }
     return out.join("\n");
     
   }

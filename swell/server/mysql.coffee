@@ -1,16 +1,22 @@
 
 class Mysql
   
-  # just takes the connection
-  constructor: (connection) ->
-    @connection = connection
+  mysql = require 'mysql'
   
-  # find records
-  find: (options, store, callback) =>
+  # connection and database as args
+  constructor: (@collection) ->
+    @db = mysql.createConnection(host: @collection.data.host, user: @collection.data.user, password:@collection.data.password)
+    @db.connect()
+    this
     
+  # find records
+  use: (callback) ->
+    @db.query 'USE ' + @collection.data.db, callback
+    
+  find: (options, callback) =>
     # begin the query
     fields = if options.fields then options.fields else '*'
-    query = 'SELECT ' + fields + ' FROM ' + store 
+    query = 'SELECT ' + fields + ' FROM ' + @collection.store
     
     if options.join
       direction = options.join.direction or 'LEFT'
@@ -26,18 +32,21 @@ class Mysql
         for field, value of options.where
            if value instanceof Object
              for operand, val of value
-              conditions.push field + ' ' + operand + ' ' + @connection.escape(val)
+              conditions.push field + ' ' + operand + ' ' + @db.escape(val)
            else
-            conditions.push field + '=' + @connection.escape(value)
+            conditions.push field + '=' + @db.escape(value)
     
         query += ' WHERE ' + conditions.join(' AND ')
     
     if options.order
       query += ' ORDER BY ' + options.order
+    else if @collection.sort
+      query += ' ORDER BY ' + @collection.sort
+    
     if options.limit
       query += ' LIMIT ' + options.limit  
     
-    @connection.query query, (err, rows, fields) =>
+    @db.query query, (err, rows, fields) =>
       if err and callback
         callback err
       else
@@ -52,10 +61,10 @@ class Mysql
           if callback
             callback null, results
     
-  # get a single record by id  
-  get: (id, key, store, callback) =>
+  ### get a single record by id  
+  get: (id, key, @collection.store, callback) =>
     
-    @connection.query 'SELECT * FROM ' + store + ' WHERE ' + key + ' = ' + @connection.escape(id), (err, rows, fields) =>
+    @db.query 'SELECT * FROM ' + @collection.store + ' WHERE ' + key + ' = ' + @db.escape(id), (err, rows, fields) =>
       if err
         callback err
       
@@ -68,13 +77,13 @@ class Mysql
         callback null, false  
     
   # insert new records
-  insert: (object, key, store, callback) =>
+  insert: (object, key, @collection.store, callback) =>
     
     # generate an id
     object[key] = @uuid()
     
-    # store the object
-    @connection.query 'INSERT INTO ' + store + ' SET ?', object, (err, res) ->
+    # @collection.store the object
+    @db.query 'INSERT INTO ' + @collection.store + ' SET ?', object, (err, res) ->
       if err
         callback err
       else if callback
@@ -82,29 +91,29 @@ class Mysql
         callback null, res
   
   # update existing records
-  update: (object, key, store, callback) =>
+  update: (object, key, @collection.store, callback) =>
     
     # avoid setting the key value
     id = object[key]
     delete object[key]
     
     # udpate
-    @connection.query 'UPDATE ' + store + ' SET ? WHERE ' + key + ' = ' + @connection.escape(id), object, callback
+    @db.query 'UPDATE ' + @collection.store + ' SET ? WHERE ' + key + ' = ' + @db.escape(id), object, callback
        
   
   # delete a record
-  destroy: (id, key, store, callback) =>
-    @connection.query 'DELETE FROM ' + store + ' WHERE ' + key + ' = ' + @connection.escape(id), callback
+  destroy: (id, key, @collection.store, callback) =>
+    @db.query 'DELETE FROM ' + @collection.store + ' WHERE ' + key + ' = ' + @db.escape(id), callback
   
 
   # increment / decrement
-  bump: (store, field, value, key, id, callback) =>
-    @connection.query 'UPDATE ' + store + ' SET '+field+'='+field+'+'+value+' WHERE ' + key + ' = ' + @connection.escape(id), callback
+  bump: (@collection.store, field, value, key, id, callback) =>
+    @db.query 'UPDATE ' + @collection.store + ' SET '+field+'='+field+'+'+value+' WHERE ' + key + ' = ' + @db.escape(id), callback
 
   # raw query. 'nuff said.  # make sure you esacape your query values before using this function!!
   query: (query, callback) =>
     results = []
-    @connection.query query, (err, rows, fields) ->
+    @db.query query, (err, rows, fields) ->
       if err
         callback err
       else
@@ -136,9 +145,9 @@ class Mysql
         string_or_object = JSON.parse(string_or_object)
     string_or_object  
     
-  # gets the fields out of a table store to prevent undefined column errors when "oversaving" objects  
-  describe: (store, callback) =>
-    @connection.query 'DESC ' + store, (err, rows, fields) ->
+  # gets the fields out of a table @collection.store to prevent undefined column errors when "oversaving" objects  
+  describe: (@collection.store, callback) =>
+    @db.query 'DESC ' + @collection.store, (err, rows, fields) ->
       if err
         callback err
       else
@@ -160,4 +169,4 @@ class Mysql
     @s4() + @s4() + '-' + @s4() + '-' + @s4() + '-' + @s4() + '-' + @s4() + @s4() + @s4()
   
   close_connection: =>
-    @connection.end()
+    @db.end()

@@ -1,1 +1,6 @@
-testing this view {{dope}}
+# Nice! You're up
+
+If you're a developer writing a new application using swell, replace this page with your application. To do this, first remove the <span style="text-decoration:line-through;">markup</span> markdown from **views/index.dust** or delete the file. Next, modify **views/layouts/app.dust** to get a fresh start. 
+
+
+**New to swell? Read [the documentation here](/page/docs)**

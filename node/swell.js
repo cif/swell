@@ -62,31 +62,32 @@ else if(opts.watch || opts.server){
   
   if(opts.watch){
     
-    var watch = require('./watch');
+    var watch  = require('./watch-client');
+    var swatch = require('./watch-server');
     
     // client side coffeescript
     if(config.coffee){  
-      var brewer = new watch.instance(config.base, config.coffee).watch();
+      var coffee = new watch.instance(config.base, config.coffee).watch();
     }
     
     // templates
     if(config.templates){  
-      var plater = new watch.instance(config.base, config.templates).watch();
+      var templates = new watch.instance(config.base, config.templates).watch();
     }
     
     // styles
     if(config.style){  
-      var styler = new watch.instance(config.base, config.style).watch();
+      var style = new watch.instance(config.base, config.style).watch();
     }
     
     // core server class watcher
     if(opts.server){  
-      var burner = new watch.instance(config.base, config.server.coffee).watch();
+      var server = new swatch.instance(config.base, config.server.coffee).watch();
     }
     
     // dependencies
     if(config.deps){  
-      var burner = new watch.instance(config.base, config.deps).watch();
+      var deps = new watch.instance(config.base, config.deps).watch();
     }
     
   }
@@ -94,7 +95,7 @@ else if(opts.watch || opts.server){
   if(opts.server){
     
     // start the server
-    var server = require(config.base + 'service/server');
+    var server = require(config.base + 'server/server');
         server.start(config, opts.watch);
     
   }

@@ -1,0 +1,125 @@
+
+@import 'func'
+
+*
+  box-sizing border-box
+  
+body, html
+  font-family 'Avant Garde', Avantgarde, 'Century Gothic', CenturyGothic, 'AppleGothic', sans-serif
+  background-color #fff
+  gradient(#E1EEF8, #fff, left, top, left, 200px)
+  background-repeat no-repeat
+  color #777
+  margin 0
+  padding 0
+
+body
+    
+div
+  position relative
+p
+  margin 3px 0 10px 0
+  font-size 13px
+  line-height 32px
+  color #555
+  a
+    font-weight bold
+    font-size 14px
+  strong
+    font-size 14px
+a
+  font-size 13px
+  color #00468C
+  text-decoration none
+  transition()
+a.selected
+a:hover
+  color #D88F2A
+  
+h1,h2,h3,h4,h5
+  font-weight 100
+  margin 7px 0 0 0
+  clear both
+h1
+  font-size 32px
+  margin 7px 0 10px 0
+h2
+  font-size 18px
+  text-transform uppercase
+h3
+  margin 20px 0 4px 0
+  font-size 16px
+  text-transform uppercase
+hr
+  border 0
+  height 1px
+  background #ccc
+  margin 25px 0
+  clear both
+  
+aside
+  position fixed
+  top 0
+  padding 25px 20px
+  width 160px
+  background #fff
+  height 100%
+  h4
+    margin-top 15px
+    font-size 10px
+    font-weight bold
+  ul
+    list-style none
+    margin 0
+    padding 0
+    li
+      margin 5px 0
+      ul 
+        padding-left 10px
+        display none
+        li a
+          font-size 12px
+      a.selected + ul
+        display block
+        li a
+          color #00468C
+        li a:hover
+          color #D88F2A
+        
+section[role=main]
+  margin 25px 2% 40px 200px
+  max-width 810px
+  img
+    margin 20px 0
+    
+  .flow
+    width 120px
+    float left
+    text-align center
+    margin 10px 15px 15px 0
+    h5
+     display block
+     background #00468C
+     width 100%
+     height 120px
+     rounded 60px
+     color #fff
+     font-weight bold
+     line-height 120px
+     box-shadow #74A9DA -2px -4px 0
+    p, a
+     padding 3px
+     font-size 11px
+     line-height 15px
+
+  pre
+    padding 10px
+    font-size 11px
+    rounded 5px
+    background-color #fff
+
+.credit
+  font-size 11px
+  a
+   font-size 11px
+  

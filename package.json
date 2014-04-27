@@ -29,7 +29,6 @@
     "uglify-js": "1.1.1",
     "express": ">= 3.x",
     "socket.io": ">= 0.9.x",
-    "mysql": ">= 1.0.x",
     "async": "~0.2.8",
     "nodemailer": "~0.4.1",
     "ent": "0.0.5",
@@ -41,7 +40,13 @@
     "less": "^1.7.0",
     "moment": "^2.6.0",
     "dustjs-helpers": "^1.2.0",
-    "adaro": "^0.1.5"
+    "adaro": "^0.1.5",
+    "stylus": "=0.22.1",
+    "showdown": "^0.3.1",
+    "timeout": "^0.2.1",
+    "mongojs": "^0.13.0",
+    "mysql": "^2.1.1",
+    "formidable": "^1.0.14"
   },
   "devDependencies": {
     "mocha": "0.3.x"

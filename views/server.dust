@@ -1,0 +1,71 @@
+# Server
+
+### Overview
+
+The server is a collection of node modules each which handle different aspects of the request and response pipeline. This makes extending the capabilities of each module clean. In most cases, extensions will be implemented in **middleware.js**. For example, if you wanted to install [Passport](http://passportjs.org/) as your authentication service. All you would have to do is install the module with npm, then add the appropriate routes to the middleware.js setup() method.
+
+### Pipeline
+The server modules handle the request / response flow, more or less in left to right order:
+<div class="flow">
+  <h5>server.js</h5>
+  <p><b>server/server.js</b> instantiates <a href="http://nodejs.org/api/http.html">HTTP</a>, <a href="https://www.npmjs.org/package/express">express</a> as well as the <a href="http://expressjs.com/4x/api.html#middleware">middleware</a>, and the other components. It also <b>watches for changes to swell.js</b> and reloads them for save n' go development.</p>
+</div>
+
+<div class="flow">
+  <h5>middleware.js</h5>
+  <p><b>server/middlware.js</b> sets up static asset routes, the <a href="https://github.com/krakenjs/adaro">dust view engine</a>, sessions and cookies as well as static JSON. It is first in line, so any <b>custom route handlers you specify</b> here will take precedence over router.js</p>
+</div>
+
+<div class="flow">
+  <h5>router.js</h5>
+  <p><b>server/router.js</b> handles routes specified by the app configuration as well as <b>automatic mapping to responder object.method()</b> from uri patterns.</p>
+</div>
+
+<div class="flow">
+  <h5>swell.js</h5>
+  <p><b>server/swell.js</b> consits of the swell core coffeescript objects as well as models, collections and responders. The <b>methods it contains are called by the router</b> which in turn passes the response callback to render.js</p>
+</div>
+
+<div class="flow">
+  <h5>socket.js</h5>
+  <p><b>server/socket.js</b> handles socket broadcasts returned to router.js and sends the packets to appropriately subscribed clients.</p>
+</div>
+
+<div class="flow">
+  <h5>render.js</h5>
+  <p><b>server/render.js</b> sends the appropriate final headers and <b>HTML/JSON/XML output</b> to the client as specified by swell.js object methods.</p>
+</div>
+
+### Middleware
+
+As mentioned above, you are free to use any middleware you like by simply adding it within the **setup() method** in **server/middelware.js**. This can be extremely useful in the event you want to make use of **regular expression** route matching, or require more control over the response object for certain routes. 
+
+Here's a simple example of handling a request via regex matched route in middleware.js (taken from [the expressjs docs](http://expressjs.com/4x/api.html#middleware))
+
+    app.get(/^\/commits\/(\w+)(?:\.\.(\w+))?$/, function(req, res){
+        var from = req.params[0];
+        var to = req.params[1] || 'HEAD';
+        res.send('commit range ' + from + '..' + to);
+    });
+
+
+### Routes
+
+There are two ways in which requests are routed to a responder object method (located in server/swell.js): 
+
+**1. swell.json** allows you to map routes using the same method as with middleware, but directly to a responder method within your configuration file. Example:
+
+
+    "/widgets/:id" : "Widgets.view"
+
+ 
+**2. URI inflection** will automatically map request URIs to the responder object.method of the same pattern. For example, a GET request to /widgets/ would call Widgets.get(*request*,*callback*) and a request to /widgets/by_price/ would map to Widgets.by_price(*request*,*callback*)
+
+
+### Responders
+
+Responders are the javascript objects (compiled from coffescript files by default) which are instantiated and called by router.js. Each method takes two arguments, *request* and *callback*. The request is basically the raw req object from the express route with multipart and query data stored in a special **request.data** parameter  
+
+
+_____________
+{>"partials/credit"/}

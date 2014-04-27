@@ -1,5 +1,31 @@
-<html>
-  <body>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+  <title>SWELL</title>
+  <link rel="apple-touch-icon" href="/public/img/apple-touch-icon.png" />
+  <link rel="shortcut icon" href="/public/favicon.ico" />
+  <link rel="stylesheet" href="/public/styles.css" />
+</head>
+<body class="swell">
+  <aside>
+    ![Swell Web Development](/img/swell.png)
+    {>"partials/menu"/}
+  </aside>
+  <section role="main">
     {>"{_main}"/}
-  </body>
+  </section>
+
+<script type="text/javascript" src="/socket.io/socket.io.js"> </script>  
+{@if cond="config.watching"}
+ <script type="text/javascript" src="/js/deps.js?{@cache_buster/}"> </script>
+ <script type="text/javascript" src="/js/tmpl.js?{@cache_buster/}"> </script>
+ <script type="text/javascript" src="/js/app.js?{@cache_buster/}"> </script>
+{:else}
+ <script type="text/javascript" src="/js/production.js?{@cache_buster/}"> </script>
+{/if}  
+<script type="text/javascript"> var app; $(document).ready(function(){ app = new routers.Application(); }); </script>
+</body>
 </html>

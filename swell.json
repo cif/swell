@@ -2,7 +2,7 @@
   "name": "New Swell App",
   "about": "About the awesome application",
   "author": "you@email.com",
-  "version": "0.0.1",
+  "version": "0.1 BETA",
   "coffee": {
     "compiler": "coffee",
     "folders": [
@@ -13,7 +13,13 @@
         "models": "models"
       },
       {
-        "": "app"
+        "collections": "collections"
+      },
+      {
+        "routers": "client/routers"
+      },
+      {
+        "views": "client/views"
       }
     ],
     "output": "public/js/app.js",
@@ -21,28 +27,43 @@
   },
   "templates": {
     "compiler": "dust",
-    "folders": "views",
+    "folders": "dust",
     "output": "public/js/tmpl.js",
     "extensions":[".dust"]
   },
   "style": {
-    "compiler": "less",
+    "compiler": "stylus",
     "folders": "style",
     "output": "public/styles.css",
-    "extensions":[".less"]
+    "extensions":[".styl"]
   },
   "deps": {
     "compiler" : "deps",
-    "folders": "vendor",
+    "folders": "client/vendor",
     "output": "public/js/deps.js",
     "extensions":[".js"]
   },
   "production": "public/js/production.js",
   "server": {
     "routes": {
-      "/": "Application.index"
+      "/": "Pages.index",
+      "/page/:view" : "Pages.page"
     },
-    "resources": {},
+    "resources": {
+      "mongo-example" : {
+        "engine" : "mongo",
+        "db":"swell",
+        "host" : "127.0.0.1",
+        "port":"27017"
+      },
+      "mysql-example" : {
+        "engine" : "mysql",
+        "db" : "swell",
+        "host" : "127.0.0.1",
+        "user" : "swell",
+        "password" : "sw311!"
+      }
+    },
     "coffee": {
       "compiler": "coffee",
       "folders": [
@@ -53,15 +74,19 @@
           "models": "models"
         },
         {
+          "collections": "collections"
+        },
+        {
           "responders": "responders"
         }
-        
       ],
       "output": "server/swell.js",
-      "extensions":[".coffee"]
+      "extensions":[".coffee"],
+      "exports" : true
     },
     "views":"views",
     "port": "3030",
+    "timeout" : 3000,
     "cookie_hash" : "cookie-hash-you-should-change",
     "cookie_secret" : "cookie-secret-you-should-change",
     "socket_io" : {

@@ -12,20 +12,9 @@ class Model
   # these get recyled in mem. need to destroy in constructor!
   attributes: { }
     
-  # takes the reponder and an optional store if specified  
-  constructor: (@responder, @options) ->
-    
-    # set options
-    @store = options.store if options.store
-    throw new Error 'A store property was not specified for a Flint.Model instance' if !@store
-      
-    # defaults start as attributes
-    @attributes = {}
-    if @defaults
-      @attributes = @defaults
-    
-    # set anything passed 
-    @set options
+  # extends attributes as defaults and returns the instance 
+  constructor: (@attributes) ->
+    @__extend  @attributes || {}, @defaults
     this
     
   # simple set and get methods
@@ -41,7 +30,7 @@ class Model
     @attributes
   
   
-  # data manipulation methods.
+  ### data manipulation methods.
   
   # create()
   # props - additional properties to save along with currently stored attributes
@@ -424,17 +413,10 @@ class Model
   
   
   # utilities  
-     
-  # quick and dirty non recursive extend impl
-  extend: (obj, source) ->
-    for prop,value of source
-      obj[prop] = value
-    obj
+  ###   
   
-  # returns current server date and time in sql format  
-  datetime: =>
-    now = new Date()
-    sql =  now.getFullYear() + '-' + now.getMonth() + '-' + now.getDate()
-    sql += ' ' + now.getHours() + ':' + now.getMinutes() + ':' + now.getSeconds()
-    sql  
-    
+  # quick and dirty non recursive extend for default attributes
+  __extend: (obj, source) ->
+    for prop,value of source
+      obj[prop] = value if !obj.hasOwnProperty(prop)
+    obj  
