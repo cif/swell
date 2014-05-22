@@ -15,6 +15,10 @@ class Router extends Backbone.Router
     @init.apply(@, arguments)
     this
   
+  # function can be used to carry out any additional
+  # initialization required on controller classes
+  init: =>
+    
   # delegate() and undelegate() bind / unbind the events to free up memory for 
   # the other parts of your application 
   delegate: =>

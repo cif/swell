@@ -34,11 +34,13 @@ class Responder
     
     # initialize the store and call a simple find
     new @collection @config, (err, @collection) =>
-      callback(err) if err
+      if err
+        callback(err) 
+        return false
       if request.data.id
-        @collection.get(request.data.id, callback)
+        @collection.get request.data.id, callback
       else  
-        @collection.fetch(callback)
+        @collection.fetch callback
         
   post: (request, callback) =>
     callback(null, unauthorized:true) if !@expose_rest

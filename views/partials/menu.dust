@@ -4,7 +4,7 @@
 *    <a href="/page/server" {@eq key="server" value=view}class="selected"{/eq}>Server</a>
     *    <a href="#overview">Overview</a>
     *    <a href="#pipeline">Pipeline</a>
-    *    <a href="#routes">Middleware</a>
+    *    <a href="#middleware">Middleware</a>
     *    <a href="#routes">Routes</a>
     *    <a href="#responders">Responders</a>
     *    <a href="#collections">Collections</a>

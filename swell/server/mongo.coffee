@@ -10,7 +10,10 @@ class Mongo
   
   # database connection and collection as args
   constructor: (@collection) ->
-    @db = mongo.connect 'mongodb://'+@collection.data.host+':27017/' + @collection.data.db, [@collection.store]
+    try
+      @db = mongo.connect 'mongodb://'+@collection.data.host+':27017/' + @collection.data.db, [@collection.store]
+    catch e
+      console.log 'caugh'
     this
       
   # find records

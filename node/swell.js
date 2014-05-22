@@ -62,32 +62,31 @@ else if(opts.watch || opts.server){
   
   if(opts.watch){
     
-    var watch  = require('./watch-client');
-    var swatch = require('./watch-server');
+    var watch  = require('./watch');
     
     // client side coffeescript
-    if(config.coffee){  
-      var coffee = new watch.instance(config.base, config.coffee).watch();
+    if(config.client){  
+      var coffee = watch.instance(config.base, config.client).watch();
     }
     
     // templates
     if(config.templates){  
-      var templates = new watch.instance(config.base, config.templates).watch();
+      var templates = watch.instance(config.base, config.templates).watch();
     }
     
     // styles
     if(config.style){  
-      var style = new watch.instance(config.base, config.style).watch();
+      var style = watch.instance(config.base, config.style).watch();
     }
     
     // core server class watcher
     if(opts.server){  
-      var server = new swatch.instance(config.base, config.server.coffee).watch();
+      var server = watch.instance(config.base, config.server.coffee).watch();
     }
     
     // dependencies
     if(config.deps){  
-      var deps = new watch.instance(config.base, config.deps).watch();
+      var deps = watch.instance(config.base, config.deps).watch();
     }
     
   }

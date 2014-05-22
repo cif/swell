@@ -1,11 +1,6 @@
 
-# Flint.Grid - similar to Flint.List 
-#
-#   * Handles common CRUD related events and triggers them (create,read,update,delete)
-#
-#   * Implements a quicksort routine for tables fired by th.sortable DOM elements
 
-class Grid extends Backbone.View
+class List extends Backbone.View
   
   _events:
     

@@ -4,9 +4,8 @@
 class Collection extends Backbone.Collection
   
   # the default comparison by default a sort_order field.
-  # specify one.  int(8) is cheap. 
-  comparator: (model) ->
-    return +model.get('sort_order')
+  # comparator: (model) ->
+  #  return +model.get('sort_order')
   
     
 

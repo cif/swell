@@ -36,7 +36,9 @@ class Collection
   # if @list is specified only those fields are returned
   fetch: (callback) =>
     @db.find {}, (err, res) =>
-      callback(err) if err
+      if err
+        callback(err) 
+        return false
       for doc in res
         for prop, val of doc
           if @list and @list.indexOf(prop.toString()) < 0

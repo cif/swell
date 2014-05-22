@@ -1,4 +1,4 @@
-// last compiled: 2014-04-26 21:04:93
+// last compiled: 2014-05-22 08:05:55
 
 var swell = {};
 var models = {};
@@ -39,7 +39,10 @@ swell.Collection = (function() {
     var _this = this;
     return this.db.find({}, function(err, res) {
       var doc, prop, val, _i, _len;
-      if (err) callback(err);
+      if (err) {
+        callback(err);
+        return false;
+      }
       for (_i = 0, _len = res.length; _i < _len; _i++) {
         doc = res[_i];
         for (prop in doc) {
@@ -519,7 +522,11 @@ swell.Mongo = (function() {
     this.insert = __bind(this.insert, this);
     this.get = __bind(this.get, this);
     this.find = __bind(this.find, this);
-    this.db = mongo.connect('mongodb://' + this.collection.data.host + ':27017/' + this.collection.data.db, [this.collection.store]);
+    try {
+      this.db = mongo.connect('mongodb://' + this.collection.data.host + ':27017/' + this.collection.data.db, [this.collection.store]);
+    } catch (e) {
+      console.log('caugh');
+    }
     this;
   }
 
@@ -804,7 +811,10 @@ swell.Responder = (function() {
     }
     return new this.collection(this.config, function(err, collection) {
       _this.collection = collection;
-      if (err) callback(err);
+      if (err) {
+        callback(err);
+        return false;
+      }
       if (request.data.id) {
         return _this.collection.get(request.data.id, callback);
       } else {
@@ -872,19 +882,27 @@ models.Example = (function() {
   Example.prototype.fields = {
     name: {
       type: 'string',
-      valid: 'not_empty',
       not_empty: true,
       not: 'bad',
       message: 'Custom description validation message'
     },
     color: {
       type: 'string',
-      length: 7
+      length: 6
     },
     sort_order: {
       type: 'number',
-      length: 7
+      length: 2
+    },
+    start_date: {
+      type: 'datetime',
+      future: false
     }
+  };
+
+  Example.prototype.defaults = {
+    name: 'New Example',
+    color: 'cc0000'
   };
 
   return Example;
@@ -902,7 +920,7 @@ collections.Examples = (function() {
 
   Examples.prototype.url = '/examples/';
 
-  Examples.prototype.resource = 'mongo-example';
+  Examples.prototype.resource = 'mysql-example';
 
   Examples.prototype.store = 'examples';
 

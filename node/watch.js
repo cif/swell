@@ -1,27 +1,31 @@
-// swell watchter (server). 
-// still struggling with why i have to replicate the coffeescript watcher : /     
+// swell watchter. 
+// instances are used for each type of compiler required e.g. coffee, dust, stylus
+             
 // 2014-04-09
 // github.com/cif/swell
 // email@benipsen.com
 
 (function(){  
   
- var fs = require('fs') 
- var nodewatch = require('node-watch');
+ var fs = require('fs');
  var compilers = require('require-all')(__dirname + '/../compilers');
  var colors = {red: '\u001b[31m', green: '\u001b[32m', yellow: '\u001b[33m', reset: '\u001b[0m'};
  
  // the instance is the only thing in exports/
  // its methods and properties take care of everything
  var instance = function(base, config){
-    this.base = base;
-    this.config = config;
-    this.changed = function(filename){
+  
+    var _this = this;
+        _this.base = base;
+        _this.config = config;
+        _this.watchers = [];
+        
+    this.changed = function(event, filename){
       
       console.log(colors.yellow + '[swell-' + _this.config.compiler +'] ' + filename + ' changed recompiling to ' + _this.config.output + colors.reset);
       _this.build_and_compile();
       
-    };  // end this.changed()
+    };  // end _this.changed()
     
     this.write = function(output, namespaces){  // write the final output file
       
@@ -30,7 +34,7 @@
       fs.writeFileSync(_this.config.output, output.join("\n"), 'utf8');
       console.log(colors.green + '[swell-' + _this.config.compiler +'] recompiled output to ' + _this.config.output + colors.reset);
       
-    } // end this.write()
+    } // end _this.write()
     
     this.compile = function(files){
       
@@ -42,6 +46,8 @@
       files.sort();
       
       for(var f = 0; f < files.length; f++){
+        
+        if(!files[f]) continue;
         
         var parts = files[f].split(':');
             parts.shift();
@@ -80,12 +86,22 @@
         
       }
       
-    }  // end this.compile()
+    }  // end _this.compile()
     
     this.recurse = function(dir, namespace, callback){  // builds a list of the
       
       var results = []
-    
+      
+      // make sure it exists
+      if(!fs.existsSync(dir)){
+        callback('Diretory ' + _this.base + dir + ' does not exist.');
+        console.log(colors.red + '[swell-' + _this.config.compiler +'] Diretory ' + _this.base + dir + ' does not exist. ' + "\n" + colors.reset);
+        return false;
+      }
+      
+      // watch the directory
+      _this.watchers.push(fs.watch(dir, _this.changed));
+        
       // read the directory    
       fs.readdir(_this.base + dir, function(err, list) {
         
@@ -98,10 +114,10 @@
         list.forEach( function(file) {
       
           var file = dir + '/' + file;
-        
+          
           // determine if file or directory
           fs.stat(file, function(err, stat) {
-      
+            
             if (stat && stat.isDirectory()) {
                 // recurse
                 _this.recurse(file, namespace, function(err, res) {
@@ -111,6 +127,9 @@
       
             } else {
               
+              // watch it
+              //_this.watchers.push(fs.watch(file, _this.changed));
+              
               // validate extensions
               var is_valid_ext = false;
               for(var v = 0; v < _this.config.extensions.length; v++)
@@ -118,8 +137,11 @@
                   is_valid_ext = true;
                
               // push as file
-              if(is_valid_ext)
+              if(is_valid_ext){
+                // watch it
+                //_this.watchers.push(fs.watch(file, _this.changed));
                 results.push(namespace + ':' + file);    
+              }
               if (!--pending) callback(null, results);
       
             }
@@ -128,60 +150,70 @@
         });
       });
       
-    } // end this.recurse()
+    } // end _this.recurse()
     
     this.build_and_compile = function(){  // builds a flat list of folders recursively
       
       var files = [];
-      var pending = this.folders.length;
+      var pending = _this.folders.length;
       
-      for(var f = 0; f < this.folders.length; f++){
-        var namespace = this.names ? f + ':' + this.names[f] + ':' + this.folders[f] : '::' + this.folders[f];
-        this.recurse(this.folders[f], namespace, function(err, results){
+      // reset watchers
+      for(var w = 0; w < _this.watchers.length; w++){
+        _this.watchers[w].close();  
+      }
+      _this.watchers = [];
+      
+      for(var f = 0; f < _this.folders.length; f++){
+        var namespace = _this.names ? f + ':' + _this.names[f] + ':' + _this.folders[f] : '::' + _this.folders[f];
+        _this.recurse(_this.folders[f], namespace, function(err, results){
           files = files.concat(results);
-          if(!--pending) _this.compile(files);
+          if(!--pending){ 
+            _this.compile(files);
+            
+          }
           
         });
           
       }
       
-    } // end this.build_and_compile()
+    } // end _this.build_and_compile()
+    
     
     this.watch = function(){
       
       // set the compiler routine
-      this.compiler = compilers[this.config.compiler];
+      _this.compiler = compilers[_this.config.compiler];
       
       // round up the folders string or array
-      this.names = false;
-      if(typeof(this.config.folders) === 'object'){
-        this.names   = [];
-        this.folders = [];
-        for(var f = 0; f < this.config.folders.length; f++)
-          for(named in this.config.folders[f]){
-            this.folders.push(this.config.folders[f][named]);
-            this.names.push(named);
+      _this.names = false;
+      if(typeof(_this.config.folders) === 'object'){
+        _this.names   = [];
+        _this.folders = [];
+        for(var f = 0; f < _this.config.folders.length; f++)
+          for(named in _this.config.folders[f]){
+            _this.folders.push(_this.config.folders[f][named]);
+            _this.names.push(named);
           }
       
       } else 
-        this.folders = [this.config.folders];
+        _this.folders = [_this.config.folders];
       
-      nodewatch(this.folders, this.changed);
-      console.log(colors.yellow + '[swell-' + _this.config.compiler +'] watching ' + this.folders.join(',') + ' for changes ' + colors.reset); 
+      console.log(colors.yellow + '[swell-' + _this.config.compiler +'] watching ' + _this.folders.join(',') + ' for changes ' + colors.reset); 
       
       // call build to get things started
-      this.build_and_compile();
+      _this.build_and_compile();
       return this;
       
-    }; // end this.watch()
+    }; // end _this.watch()
     
-    var _this = this;  // everyone's favorite 'scoper' : P
     return this;
     
  }; // end watch() instance   
 
  // expose the 'constructor'
- exports.instance = instance;
+ exports.instance = function(a, b) {
+   return new instance(a, b);
+ };
 
 })(); 
  

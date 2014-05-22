@@ -7,6 +7,8 @@
 class Model extends Backbone.Model
   
   
+  
+  
     
   # generic validation. 
   validate: (attrs) =>

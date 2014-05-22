@@ -38,7 +38,7 @@
    for(route in config.server.routes){
 
      // replace the string arguments with wildcards for matching the method we are trying to call.
-     // TODO:  support splats!
+     // TODO: really should support splats, but routing isn't that common anyway
      regex_string = '^' + route.replace(/\:(.*)/g,'(.*)') + '$'
      wild = new RegExp(regex_string);
      if(url.match(wild)){
@@ -87,8 +87,6 @@
        var form = new formidable.IncomingForm();
        
        form.parse(req, function(err, fields, files) {
-         
-         console.log(req.query);
          
          if(err) render.out(new Error('[swell-router] failed to parse request body: ' + err.getMessage()), false, false, res);
          

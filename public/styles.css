@@ -161,6 +161,7 @@ section[role=main] pre {
 }
 .credit {
   font-size: 11px;
+  line-height: 20px;
 }
 .credit a {
   font-size: 11px;

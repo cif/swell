@@ -13,11 +13,20 @@ class Example extends swell.Model
       not_empty: true
       not: 'bad'
       message: 'Custom description validation message'
+    
     color:
       type: 'string'
-      length: 7
+      length: 6
+    
     sort_order:
       type: 'number'
-      length: 7
+      length: 2
     
-        
+    start_date:
+      type: 'datetime'
+      future: false
+    
+  defaults:
+    name: 'New Example'
+    color: 'cc0000'
+    

@@ -1,9 +1,12 @@
-// last compiled: 2014-04-26 21:04:91
+// last compiled: 2014-05-22 08:05:62
 
 var swell = {};
 var models = {};
 var collections = {};
 var routers = {};
+var views = {};
+    views.forms = {};
+    views.lists = {};
 
 __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
 __hasProp = {}.hasOwnProperty,
@@ -16,10 +19,6 @@ swell.Collection = (function() {
   function Collection() {
     Collection.__super__.constructor.apply(this, arguments);
   }
-
-  Collection.prototype.comparator = function(model) {
-    return +model.get('sort_order');
-  };
 
   return Collection;
 
@@ -138,20 +137,20 @@ swell.Form = (function() {
   return Form;
 
 })();
-swell.Grid = (function() {
+swell.List = (function() {
 
-  __extends(Grid, Backbone.View);
+  __extends(List, Backbone.View);
 
-  function Grid() {
+  function List() {
     this.quicksort = __bind(this.quicksort, this);
     this.swap = __bind(this.swap, this);
     this.compare = __bind(this.compare, this);
     this.partition = __bind(this.partition, this);
     this.sort = __bind(this.sort, this);
-    Grid.__super__.constructor.apply(this, arguments);
+    List.__super__.constructor.apply(this, arguments);
   }
 
-  Grid.prototype._events = {
+  List.prototype._events = {
     'click tr td,.edit': 'edit',
     'click th.sortable': 'sort',
     'click .delete': 'delete',
@@ -159,12 +158,12 @@ swell.Grid = (function() {
     'click .view': 'read'
   };
 
-  Grid.prototype.initialize = function(options) {
+  List.prototype.initialize = function(options) {
     this.events = _.extend({}, this._events, this.events);
     return this;
   };
 
-  Grid.prototype.render = function(template, data, headings) {
+  List.prototype.render = function(template, data, headings) {
     if (template) this.template = template;
     if (headings) this.headings = headings;
     if (data) this.data = data;
@@ -185,15 +184,15 @@ swell.Grid = (function() {
     return this;
   };
 
-  Grid.prototype.before = function() {};
+  List.prototype.before = function() {};
 
-  Grid.prototype.after = function() {};
+  List.prototype.after = function() {};
 
-  Grid.prototype.create = function() {
+  List.prototype.create = function() {
     return this.trigger('create');
   };
 
-  Grid.prototype.read = function(e) {
+  List.prototype.read = function(e) {
     var id, target;
     target = $(e.target);
     id = target.attr('id');
@@ -204,7 +203,7 @@ swell.Grid = (function() {
     return this.trigger('read', id);
   };
 
-  Grid.prototype.edit = function(e) {
+  List.prototype.edit = function(e) {
     var id, target;
     target = $(e.target);
     id = target.attr('id');
@@ -215,7 +214,7 @@ swell.Grid = (function() {
     return this.trigger('edit', id);
   };
 
-  Grid.prototype["delete"] = function(e) {
+  List.prototype["delete"] = function(e) {
     var id, model, target;
     e.stopPropagation();
     target = $(e.target);
@@ -229,7 +228,7 @@ swell.Grid = (function() {
     return false;
   };
 
-  Grid.prototype.sort = function(e) {
+  List.prototype.sort = function(e) {
     var arrow, heading, index, items, table_root, tr, trs, _i, _j, _len, _len2, _results;
     table_root = e.target;
     while (table_root.tagName !== 'TABLE') {
@@ -267,7 +266,7 @@ swell.Grid = (function() {
     return _results;
   };
 
-  Grid.prototype.partition = function(items, begin, end, pivot) {
+  List.prototype.partition = function(items, begin, end, pivot) {
     var i, pivot_val, store, _ref;
     pivot_val = items[pivot];
     this.swap(items, pivot, end - 1);
@@ -282,7 +281,7 @@ swell.Grid = (function() {
     return store;
   };
 
-  Grid.prototype.compare = function(a, b, type) {
+  List.prototype.compare = function(a, b, type) {
     if (type == null) type = false;
     a = $(a.getElementsByTagName('td')[this.sort_index]).html();
     b = $(b.getElementsByTagName('td')[this.sort_index]).html();
@@ -309,7 +308,7 @@ swell.Grid = (function() {
     }
   };
 
-  Grid.prototype.swap = function(array, a, b) {
+  List.prototype.swap = function(array, a, b) {
     var tmp;
     tmp = array[a];
     array[a] = array[b];
@@ -317,7 +316,7 @@ swell.Grid = (function() {
     return array;
   };
 
-  Grid.prototype.quicksort = function(items, begin, end) {
+  List.prototype.quicksort = function(items, begin, end) {
     var pivot;
     if ((end - 1) > begin) {
       pivot = begin + Math.floor(Math.random() * (end - begin));
@@ -327,7 +326,7 @@ swell.Grid = (function() {
     }
   };
 
-  return Grid;
+  return List;
 
 })();
 swell.Model = (function() {
@@ -356,6 +355,7 @@ swell.Router = (function() {
   function Router() {
     this.undelegate = __bind(this.undelegate, this);
     this.delegate = __bind(this.delegate, this);
+    this.init = __bind(this.init, this);
     this.initialize = __bind(this.initialize, this);
     Router.__super__.constructor.apply(this, arguments);
   }
@@ -365,6 +365,8 @@ swell.Router = (function() {
     this.init.apply(this, arguments);
     return this;
   };
+
+  Router.prototype.init = function() {};
 
   Router.prototype.delegate = function() {
     this.undelegate();
@@ -402,12 +404,21 @@ models.Example = (function() {
     },
     color: {
       type: 'string',
-      length: 7
+      length: 6
     },
     sort_order: {
       type: 'number',
-      length: 7
+      length: 2
+    },
+    start_date: {
+      type: 'datetime',
+      future: false
     }
+  };
+
+  Example.prototype.defaults = {
+    name: 'New Example',
+    color: 'cc0000'
   };
 
   return Example;
@@ -425,7 +436,7 @@ collections.Examples = (function() {
 
   Examples.prototype.url = '/examples/';
 
-  Examples.prototype.resource = 'mongo-example';
+  Examples.prototype.resource = 'mysql-example';
 
   Examples.prototype.store = 'examples';
 
@@ -441,11 +452,76 @@ routers.Application = (function() {
   __extends(Application, Backbone.Router);
 
   function Application() {
+    this.register = __bind(this.register, this);
     Application.__super__.constructor.apply(this, arguments);
   }
 
-  Application.prototype.initialize = function() {};
+  Application.prototype.initialize = function() {
+    this.helpers = new views.Helpers();
+    this.examples = new routers.Examples(this);
+    console.log('[swell] app initialized. ' + moment().format('YYYY-MM-DD HH:mm:ss'));
+    return Backbone.history.start();
+  };
+
+  Application.prototype.routers = [];
+
+  Application.prototype.register = function(router) {
+    return this.routers.push(router);
+  };
 
   return Application;
+
+})();
+routers.Examples = (function() {
+
+  __extends(Examples, swell.Router);
+
+  function Examples() {
+    this.test = __bind(this.test, this);
+    Examples.__super__.constructor.apply(this, arguments);
+  }
+
+  Examples.prototype.routes = {
+    'test': 'test'
+  };
+
+  Examples.prototype.test = function() {
+    return console.log('hurray!');
+  };
+
+  return Examples;
+
+})();
+views.Helpers = (function() {
+
+  function Helpers() {}
+
+  Helpers.prototype.something = function() {
+    return console.log('cool');
+  };
+
+  return Helpers;
+
+})();
+views.forms.ExampleForm = (function() {
+
+  __extends(ExampleForm, swell.Form);
+
+  function ExampleForm() {
+    ExampleForm.__super__.constructor.apply(this, arguments);
+  }
+
+  return ExampleForm;
+
+})();
+views.lists.ExampleList = (function() {
+
+  __extends(ExampleList, swell.List);
+
+  function ExampleList() {
+    ExampleList.__super__.constructor.apply(this, arguments);
+  }
+
+  return ExampleList;
 
 })();

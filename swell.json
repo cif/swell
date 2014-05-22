@@ -3,7 +3,7 @@
   "about": "About the awesome application",
   "author": "you@email.com",
   "version": "0.1 BETA",
-  "coffee": {
+  "client": {
     "compiler": "coffee",
     "folders": [
       {
@@ -27,13 +27,13 @@
   },
   "templates": {
     "compiler": "dust",
-    "folders": "dust",
+    "folders": "client/dust",
     "output": "public/js/tmpl.js",
     "extensions":[".dust"]
   },
   "style": {
     "compiler": "stylus",
-    "folders": "style",
+    "folders": "client/style",
     "output": "public/styles.css",
     "extensions":[".styl"]
   },
