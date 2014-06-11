@@ -31,7 +31,7 @@
     "socket.io": ">= 0.9.x",
     "async": "~0.2.8",
     "nodemailer": "~0.4.1",
-    "ent": "0.0.5",
+    "he": "~0.4.1",
     "require-directory": "^1.2.0",
     "require-all": "0.0.8",
     "node-watch": "^0.3.4",
