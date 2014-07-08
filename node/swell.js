@@ -100,6 +100,13 @@ else if(opts.watch || opts.server){
   }
   
   
+  if(opts.new){
+    
+    // copy over the core stuff for a new app
+    
+    
+  }
+  
 }
 
 else {

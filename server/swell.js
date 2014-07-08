@@ -1,4 +1,4 @@
-// last compiled: 2014-05-22 08:05:55
+// last compiled: 2014-06-08 10:06:97
 
 var swell = {};
 var models = {};
@@ -14,6 +14,8 @@ swell.Collection = (function() {
   Collection.prototype.sort = 'sort_order';
 
   function Collection(config, callback) {
+    this.comparator = __bind(this.comparator, this);
+    this.pare = __bind(this.pare, this);
     this.update = __bind(this.update, this);
     this.add = __bind(this.add, this);
     this.get = __bind(this.get, this);
@@ -38,21 +40,8 @@ swell.Collection = (function() {
   Collection.prototype.fetch = function(callback) {
     var _this = this;
     return this.db.find({}, function(err, res) {
-      var doc, prop, val, _i, _len;
-      if (err) {
-        callback(err);
-        return false;
-      }
-      for (_i = 0, _len = res.length; _i < _len; _i++) {
-        doc = res[_i];
-        for (prop in doc) {
-          val = doc[prop];
-          if (_this.list && _this.list.indexOf(prop.toString()) < 0) {
-            delete doc[prop];
-          }
-        }
-      }
-      return callback(null, res);
+      if (err) return callback(err);
+      return callback(null, _this.pare(res));
     });
   };
 
@@ -65,8 +54,14 @@ swell.Collection = (function() {
   };
 
   Collection.prototype.add = function(data, callback) {
-    this.model = new this.model(this);
-    return this.db.insert(data, callback);
+    var cleaned;
+    this.model = new this.model(data);
+    cleaned = this.model.validate(data);
+    console.log(typeof cleaned);
+    if (typeof cleaned !== 'undefined') {
+      return callback('[swell] validation error: ' + cleaned);
+    }
+    return this.db.insert(this.model.attributes, callback);
   };
 
   Collection.prototype.update = function(data, callback) {
@@ -75,6 +70,26 @@ swell.Collection = (function() {
 
   Collection.prototype.remove = function(data, callback) {
     return this.db.destroy(data, callback);
+  };
+
+  Collection.prototype.pare = function(res) {
+    var doc, prop, val, _i, _len;
+    for (_i = 0, _len = res.length; _i < _len; _i++) {
+      doc = res[_i];
+      for (prop in doc) {
+        val = doc[prop];
+        if (this.list && this.list.indexOf(prop.toString()) < 0) delete doc[prop];
+      }
+    }
+    return res;
+  };
+
+  Collection.prototype.comparator = function(model) {
+    if (this.sort_by) {
+      return model.get(this.sort_by);
+    } else {
+      return 0;
+    }
   };
 
   return Collection;
@@ -88,6 +103,9 @@ swell.Model = (function() {
 
   function Model(attributes) {
     this.attributes = attributes;
+    this.validate_field = __bind(this.validate_field, this);
+    this.clean = __bind(this.clean, this);
+    this.validate = __bind(this.validate, this);
     this.set = __bind(this.set, this);
     this.get = __bind(this.get, this);
     this.__extend(this.attributes || {}, this.defaults);
@@ -109,6 +127,33 @@ swell.Model = (function() {
       this.attributes[prop] = value;
     }
     return this.attributes;
+  };
+
+  Model.prototype.validate = function(attrs, allow_objects) {
+    var key, valid, value, _ref;
+    if (allow_objects == null) allow_objects = true;
+    this.clean();
+    _ref = this.attributes;
+    for (key in _ref) {
+      value = _ref[key];
+      valid = this.validate_field(key, this.fields[key]);
+    }
+  };
+
+  Model.prototype.clean = function() {
+    var key, value, _ref;
+    _ref = this.attributes;
+    for (key in _ref) {
+      value = _ref[key];
+      if (!this.fields[key] && key !== this.idAttribute) {
+        delete this.attributes[key];
+      }
+    }
+  };
+
+  Model.prototype.validate_field = function(attr, validator) {
+    var value;
+    return value = this.attributes[attr];
   };
 
   /* data manipulation methods.
@@ -571,12 +616,26 @@ swell.Mongo = (function() {
 
 })();
 swell.Mysql = (function() {
-  var mysql;
+  var moment, mysql;
 
   mysql = require('mysql');
 
+  moment = require('moment');
+
   function Mysql(collection) {
     this.collection = collection;
+    this.close_connection = __bind(this.close_connection, this);
+    this.uuid = __bind(this.uuid, this);
+    this.s4 = __bind(this.s4, this);
+    this.describe = __bind(this.describe, this);
+    this.objectify = __bind(this.objectify, this);
+    this.stringify = __bind(this.stringify, this);
+    this.query = __bind(this.query, this);
+    this.bump = __bind(this.bump, this);
+    this.destroy = __bind(this.destroy, this);
+    this.update = __bind(this.update, this);
+    this.insert = __bind(this.insert, this);
+    this.get = __bind(this.get, this);
     this.find = __bind(this.find, this);
     this.db = mysql.createConnection({
       host: this.collection.data.host,
@@ -623,8 +682,8 @@ swell.Mysql = (function() {
     }
     if (options.order) {
       query += ' ORDER BY ' + options.order;
-    } else if (this.collection.sort) {
-      query += ' ORDER BY ' + this.collection.sort;
+    } else if (this.collection.sort_by) {
+      query += ' ORDER BY ' + this.collection.sort_by;
     }
     if (options.limit) query += ' LIMIT ' + options.limit;
     return this.db.query(query, function(err, rows, fields) {
@@ -650,116 +709,119 @@ swell.Mysql = (function() {
     });
   };
 
-  /* get a single record by id  
-  get: (id, key, @collection.store, callback) =>
-    
-    @db.query 'SELECT * FROM ' + @collection.store + ' WHERE ' + key + ' = ' + @db.escape(id), (err, rows, fields) =>
-      if err
-        callback err
-      
-      if rows and rows.length > 0
-        res = rows[0]
-        for prop,value of res
-          res[prop] = value
-        callback null, res
-      else
-        callback null, false  
-    
-  # insert new records
-  insert: (object, key, @collection.store, callback) =>
-    
-    # generate an id
-    object[key] = @uuid()
-    
-    # @collection.store the object
-    @db.query 'INSERT INTO ' + @collection.store + ' SET ?', object, (err, res) ->
-      if err
-        callback err
-      else if callback
-        res.id = object.id
-        callback null, res
-  
-  # update existing records
-  update: (object, key, @collection.store, callback) =>
-    
-    # avoid setting the key value
-    id = object[key]
-    delete object[key]
-    
-    # udpate
-    @db.query 'UPDATE ' + @collection.store + ' SET ? WHERE ' + key + ' = ' + @db.escape(id), object, callback
-       
-  
-  # delete a record
-  destroy: (id, key, @collection.store, callback) =>
-    @db.query 'DELETE FROM ' + @collection.store + ' WHERE ' + key + ' = ' + @db.escape(id), callback
-  
-  
-  # increment / decrement
-  bump: (@collection.store, field, value, key, id, callback) =>
-    @db.query 'UPDATE ' + @collection.store + ' SET '+field+'='+field+'+'+value+' WHERE ' + key + ' = ' + @db.escape(id), callback
-  
-  # raw query. 'nuff said.  # make sure you esacape your query values before using this function!!
-  query: (query, callback) =>
-    results = []
-    @db.query query, (err, rows, fields) ->
-      if err
-        callback err
-      else
-        if rows.length is 0
-          callback false  
-        else
-          for row in rows
-            for prop,value of row
-              row[prop] = @objectify(value)
-            results.push row
-          if callback
-            callback null, results
-    
-  
-  # NOT IN USE JUST YET ...
-  # stringify() - turns anything that isn't a string into JSON
-  # this can happen if you have a valid key (field name) who's value is an object or array (common ORM pitfall)
-  stringify: (object) =>
-    for prop,value of object
-      if typeof value != 'string'
-        object[prop] = JSON.stringify(value)
-    object
-  
-  # objectify() - the inverse of stringify. 
-  objectify: (string_or_object) =>
-    if typeof string_or_object != 'string'
-      return string_or_object
-    if (/^[\],:{}\s]*$/.test(string_or_object.replace(/\\["\\\/bfnrtu]/g, '@').replace(/"[^"\\\n\r]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g, ']').replace(/(?:^|:|,)(?:\s*\[)+/g, '')))
-        string_or_object = JSON.parse(string_or_object)
-    string_or_object  
-    
-  # gets the fields out of a table @collection.store to prevent undefined column errors when "oversaving" objects  
-  describe: (@collection.store, callback) =>
-    @db.query 'DESC ' + @collection.store, (err, rows, fields) ->
-      if err
-        callback err
-      else
-        valid = []
-        for row in rows
-          valid.push
-            name: row.Field
+  Mysql.prototype.get = function(id, callback) {
+    var _this = this;
+    return this.db.query('SELECT * FROM ' + this.collection.store + ' WHERE ' + key + ' = ' + this.db.escape(id), function(err, rows, fields) {
+      var prop, res, value;
+      if (err) callback(err);
+      if (rows && rows.length > 0) {
+        res = rows[0];
+        for (prop in res) {
+          value = res[prop];
+          res[prop] = value;
+        }
+        return callback(null, res);
+      } else {
+        return callback(null, false);
+      }
+    });
+  };
+
+  Mysql.prototype.insert = function(object, callback) {
+    return this.db.query('INSERT INTO ' + this.collection.store + ' SET ?', object, function(err, res) {
+      if (err) {
+        return callback(err);
+      } else if (callback) {
+        res.id = object.id;
+        return callback(null, res);
+      }
+    });
+  };
+
+  Mysql.prototype.update = function(object, callback) {
+    return this.db.query('UPDATE ' + this.collection.store + ' SET ? WHERE ' + key + ' = ' + this.db.escape(id), object, callback);
+  };
+
+  Mysql.prototype.destroy = function(id, callback) {
+    return this.db.query('DELETE FROM ' + this.collection.store + ' WHERE ' + key + ' = ' + this.db.escape(id), callback);
+  };
+
+  Mysql.prototype.bump = function(field, value, id, callback) {
+    return this.db.query('UPDATE ' + this.collection.store + ' SET ' + field + '=' + field + '+' + value + ' WHERE ' + key + ' = ' + this.db.escape(id), callback);
+  };
+
+  Mysql.prototype.query = function(query, callback) {
+    var results;
+    results = [];
+    return this.db.query(query, function(err, rows, fields) {
+      var prop, row, value, _i, _len;
+      if (err) {
+        return callback(err);
+      } else {
+        if (rows.length === 0) {
+          return callback(false);
+        } else {
+          for (_i = 0, _len = rows.length; _i < _len; _i++) {
+            row = rows[_i];
+            for (prop in row) {
+              value = row[prop];
+              row[prop] = this.objectify(value);
+            }
+            results.push(row);
+          }
+          if (callback) return callback(null, results);
+        }
+      }
+    });
+  };
+
+  Mysql.prototype.stringify = function(object) {
+    var prop, value;
+    for (prop in object) {
+      value = object[prop];
+      if (typeof value !== 'string') object[prop] = JSON.stringify(value);
+    }
+    return object;
+  };
+
+  Mysql.prototype.objectify = function(string_or_object) {
+    if (typeof string_or_object !== 'string') return string_or_object;
+    if (/^[\],:{}\s]*$/.test(string_or_object.replace(/\\["\\\/bfnrtu]/g, '@').replace(/"[^"\\\n\r]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g, ']').replace(/(?:^|:|,)(?:\s*\[)+/g, ''))) {
+      string_or_object = JSON.parse(string_or_object);
+    }
+    return string_or_object;
+  };
+
+  Mysql.prototype.describe = function(callback) {
+    return this.db.query('DESC ' + this.collection.store, function(err, rows, fields) {
+      var row, valid, _i, _len;
+      if (err) {
+        return callback(err);
+      } else {
+        valid = [];
+        for (_i = 0, _len = rows.length; _i < _len; _i++) {
+          row = rows[_i];
+          valid.push({
+            name: row.Field,
             type: row.Type
-        if callback
-          callback null, valid
-  
-  # generates unique ids
-  s4: =>
-    Math.floor((1 + Math.random()) * 0x10000)
-        .toString(16)
-        .substring(1)
-        .toUpperCase()      
-  uuid: =>
-    @s4() + @s4() + '-' + @s4() + '-' + @s4() + '-' + @s4() + '-' + @s4() + @s4() + @s4()
-  
-  close_connection: =>
-    @db.end()
-  */
+          });
+        }
+        if (callback) return callback(null, valid);
+      }
+    });
+  };
+
+  Mysql.prototype.s4 = function() {
+    return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1).toUpperCase();
+  };
+
+  Mysql.prototype.uuid = function() {
+    return this.s4() + this.s4() + '-' + this.s4() + '-' + this.s4() + '-' + this.s4() + '-' + this.s4() + this.s4() + this.s4();
+  };
+
+  Mysql.prototype.close_connection = function() {
+    return this.db.end();
+  };
 
   return Mysql;
 
@@ -771,22 +833,21 @@ swell.Responder = (function() {
 
   path = require('path');
 
-  Responder.prototype.expose = false;
+  Responder.prototype.expose_rest = false;
 
   function Responder(config) {
     this.config = config;
-    this.cookie = __bind(this.cookie, this);
     this["delete"] = __bind(this["delete"], this);
     this.put = __bind(this.put, this);
     this.post = __bind(this.post, this);
     this.get = __bind(this.get, this);
     this.after = __bind(this.after, this);
     this.before = __bind(this.before, this);
-    this.init.apply(this, arguments);
+    this.initialize.apply(this, arguments);
     this;
   }
 
-  Responder.prototype.init = function(config) {
+  Responder.prototype.initialize = function(config) {
     this.config = config;
     return this;
   };
@@ -802,19 +863,16 @@ swell.Responder = (function() {
   Responder.prototype.get = function(request, callback) {
     var _this = this;
     if (!this.expose_rest) {
-      callback(null, {
+      return callback(null, {
         unauthorized: true
       });
     }
     if (!this.collection) {
-      callback('[swell] A collection must specified to use REST features');
+      return callback('[swell] A collection must specified to use REST features');
     }
     return new this.collection(this.config, function(err, collection) {
       _this.collection = collection;
-      if (err) {
-        callback(err);
-        return false;
-      }
+      if (err) return callback(err);
       if (request.data.id) {
         return _this.collection.get(request.data.id, callback);
       } else {
@@ -826,9 +884,12 @@ swell.Responder = (function() {
   Responder.prototype.post = function(request, callback) {
     var _this = this;
     if (!this.expose_rest) {
-      callback(null, {
+      return callback(null, {
         unauthorized: true
       });
+    }
+    if (!this.collection) {
+      return callback('[swell] A collection must specified to use REST features');
     }
     return new this.collection(this.config, function(err, collection) {
       _this.collection = collection;
@@ -839,9 +900,12 @@ swell.Responder = (function() {
   Responder.prototype.put = function(request, callback) {
     var _this = this;
     if (!this.expose_rest) {
-      callback(null, {
+      return callback(null, {
         unauthorized: true
       });
+    }
+    if (!this.collection) {
+      return callback('[swell] A collection must specified to use REST features');
     }
     return new this.collection(this.config, function(err, collection) {
       _this.collection = collection;
@@ -852,9 +916,12 @@ swell.Responder = (function() {
   Responder.prototype["delete"] = function(request, callback) {
     var _this = this;
     if (!this.expose_rest) {
-      callback(null, {
+      return callback(null, {
         unauthorized: true
       });
+    }
+    if (!this.collection) {
+      return callback('[swell] A collection must specified to use REST features');
     }
     return new this.collection(this.config, function(err, collection) {
       _this.collection = collection;
@@ -862,11 +929,26 @@ swell.Responder = (function() {
     });
   };
 
-  Responder.prototype.cookie = function(req, key, value, options) {
-    if (options == null) options = {};
+  return Responder;
+
+})();
+models.Book = (function() {
+
+  __extends(Book, swell.Model);
+
+  function Book() {
+    Book.__super__.constructor.apply(this, arguments);
+  }
+
+  Book.prototype.has_many = [collections.Chapters];
+
+  Book.prototype.fields = {
+    title: {
+      type: 'string'
+    }
   };
 
-  return Responder;
+  return Book;
 
 })();
 models.Example = (function() {
@@ -888,10 +970,11 @@ models.Example = (function() {
     },
     color: {
       type: 'string',
-      length: 6
+      maxlength: 6
     },
     sort_order: {
       type: 'number',
+      expr: /^#([0-9a-f]{3}|[0-9a-f]{6})$/,
       length: 2
     },
     start_date: {
@@ -906,6 +989,17 @@ models.Example = (function() {
   };
 
   return Example;
+
+})();
+collections.Chapters = (function() {
+
+  __extends(Chapters, swell.Collection);
+
+  function Chapters() {
+    Chapters.__super__.constructor.apply(this, arguments);
+  }
+
+  return Chapters;
 
 })();
 collections.Examples = (function() {
@@ -926,7 +1020,7 @@ collections.Examples = (function() {
 
   Examples.prototype.sort_by = 'sort_order';
 
-  Examples.prototype.list = ['_id', 'name'];
+  Examples.prototype.list = ['_id', 'name', 'color'];
 
   return Examples;
 

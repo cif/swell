@@ -36,7 +36,8 @@
     socket = require(config.base + 'server/socket');
     socket.setup(server, app, config);
     
-    // require the server side of swell, the wrapper method is used for watching and catching syntax errors
+    // require the server side of swell, 
+    // the wrapper method is used for watching and catching syntax errors
     get_swell();
     
     // start the party
@@ -62,7 +63,7 @@
     
     try {
       
-      delete require.cache[path.resolve(config.base + 'server/swell.js')]
+      delete require.cache[path.resolve(config.base + 'server/swell.js')];
       swell = require(path.resolve(config.base + 'server/swell'));
       if(router) router.update(swell);
       
@@ -79,4 +80,4 @@
   
   exports.start = start;
   
-})()
+})();

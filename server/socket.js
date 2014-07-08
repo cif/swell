@@ -22,8 +22,6 @@
     // start listening
     socket = io.listen(server, config.server.socket_io);
     
-    
-    
   };
   
   // an interface that allows events to emit from the router and responder
@@ -35,4 +33,4 @@
   exports.emit = emit;
   exports.setup = setup;
   
-})()
+})();

@@ -17,7 +17,7 @@ class Model
     @__extend  @attributes || {}, @defaults
     this
     
-  # simple set and get methods
+  # set and get methods as per backbone's way
   get: (prop) =>
     @attributes[prop]
   
@@ -30,6 +30,30 @@ class Model
     @attributes
   
   
+  # mirrors default backbone client side validation schema, but more automated
+  validate: (attrs, allow_objects = true) =>
+    @clean()
+    for key,value of @attributes
+      valid = @validate_field(key, @fields[key])
+      
+  
+    return  
+  #  removes extraneous data attached on the model
+  clean: =>
+    for key,value of @attributes
+      if !@fields[key] and key != @idAttribute
+        delete @attributes[key]
+    
+    return
+  
+  
+  # validates invidivdual field (lots o' options)
+  validate_field: (attr, validator) =>
+    value = @attributes[attr]
+    
+    
+    
+        
   ### data manipulation methods.
   
   # create()

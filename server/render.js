@@ -39,13 +39,13 @@
     // the preprocessor method allows for markdown to be 
     // converted to HTML before sending the dust template 
     // off to be compiled and rendered / mashed up
-    var file = config.base + config.server.views + '/' + name + '.dust'
+    var file = config.base + config.server.views + '/' + name + '.dust';
     var tmpl = converter.makeHtml(fs.readFileSync(file,'utf8'));
     callback(null, tmpl);
     
     //console.log(name, context, callback);
     
-  } // end preprocess()
+  }; // end preprocess()
   
   var out = function(err, data, emit, res, callback){
     
@@ -116,4 +116,4 @@
   exports.out = out;
   exports.setup = setup;
   
-})()
+})();

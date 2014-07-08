@@ -24,7 +24,8 @@
    
    }
    return obj;
- }
+ };
+ 
  var assign = function(obj, prop, value) {
     
     if (typeof prop === "string")
@@ -33,9 +34,7 @@
     if (prop.length > 1) {
         var e = prop.shift();
         assign(obj[e] =
-                 Object.prototype.toString.call(obj[e]) === "[object Object]"
-                 ? obj[e]
-                 : {},
+                 Object.prototype.toString.call(obj[e]) === "[object Object]" ? obj[e] : {},
                  prop,
                value);
     } else
@@ -87,9 +86,7 @@
     if (prop.length > 1) {
         var e = prop.shift();
         destroy(obj[e] =
-                 Object.prototype.toString.call(obj[e]) === "[object Object]"
-                 ? obj[e]
-                 : {},
+                 Object.prototype.toString.call(obj[e]) === "[object Object]" ? obj[e] : {},
                prop);
     } else 
       delete obj[prop[0]];

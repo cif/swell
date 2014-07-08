@@ -96,6 +96,12 @@
            req.data[key] = fields[key];
          }
          
+         // get parsed data
+         req.data.files = {}
+         for(key in files){
+           req.data.files[key] = files[key];
+         }
+         
          // extend query parameters but dont override post data
          for(obj in req.query){
            if(!req.data.hasOwnProperty(obj)){

@@ -32,18 +32,12 @@ class Collection
     else 
       callback('[swell] could not connect to data source "'+@resource+'" :' + JSON.stringify(@data))
     
-  # fetch method simply returns the entire collection of models
+  # fetch method returns the entire collection of models
   # if @list is specified only those fields are returned
   fetch: (callback) =>
     @db.find {}, (err, res) =>
-      if err
-        callback(err) 
-        return false
-      for doc in res
-        for prop, val of doc
-          if @list and @list.indexOf(prop.toString()) < 0
-            delete doc[prop]
-      callback(null, res)
+      return callback(err) if err
+      callback null, @pare(res)
   
   # query allows for find options
   where: (options, callback) =>
@@ -55,9 +49,14 @@ class Collection
     
   # add saves a new model
   add: (data, callback) =>
-    # instantiate the model instance before storage for validation
-    @model = new @model @
-    @db.insert data, callback
+    # instantiate a model instance
+    @model = new @model data
+    
+    # clean / validate the data, throw an error if invalid data
+    cleaned = @model.validate(data)
+    console.log typeof cleaned
+    return callback('[swell] validation error: ' + cleaned) if typeof cleaned != 'undefined'
+    @db.insert @model.attributes, callback
   
   # update updates an existing model
   update: (data, callback) =>
@@ -67,4 +66,14 @@ class Collection
   remove: (data, callback) ->
     @db.destroy data, callback
       
-      
+  # removes items for list view (smaller transmit)
+  pare: (res) =>
+    for doc in res
+      for prop, val of doc
+        if @list and @list.indexOf(prop.toString()) < 0
+          delete doc[prop]
+    res          
+    
+  # default comparator, used for sorting
+  comparator: (model) =>
+    return if @sort_by then model.get(@sort_by) else 0

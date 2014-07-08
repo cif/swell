@@ -1,6 +1,6 @@
 # Overivew
 
-Swell **is not a framework**, but rather a small collection of compilers and a thin core library of objects that speed the development of javascript apps. Because both the client and server use javascript, your application's models and collections can be maintained in single constructs that extend **swell.Model** and **swell.Collection**, respectively. Collections can **specify their own data source** directly or via source object specified by your app's configuration.
+Swell **is not a framework**, but rather a collection of compilers and a thin core library of objects that speed the development of javascript apps. Because both the client and server use javascript, your application's models and collections can be maintained in single constructs that extend **swell.Model** and **swell.Collection**. Collections **specify their own data source** via source your app's configuration.
 
 ### Under the hood
 

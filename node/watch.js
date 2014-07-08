@@ -34,7 +34,7 @@
       fs.writeFileSync(_this.config.output, output.join("\n"), 'utf8');
       console.log(colors.green + '[swell-' + _this.config.compiler +'] recompiled output to ' + _this.config.output + colors.reset);
       
-    } // end _this.write()
+    }; // end _this.write()
     
     this.compile = function(files){
       
@@ -60,7 +60,7 @@
         if(parts[0] > '') 
             file_parts.unshift(parts[0]);
             file_parts = file_parts.join('/');
-            file_parts = file_parts.replace(parts[1],'')
+            file_parts = file_parts.replace(parts[1],'');
         
         // trim slashes off the ends
         if( file_parts.substr(0,1) == '/' )
@@ -86,11 +86,11 @@
         
       }
       
-    }  // end _this.compile()
+    };  // end _this.compile()
     
     this.recurse = function(dir, namespace, callback){  // builds a list of the
       
-      var results = []
+      var results = [];
       
       // make sure it exists
       if(!fs.existsSync(dir)){
@@ -113,7 +113,7 @@
         // walk it
         list.forEach( function(file) {
       
-          var file = dir + '/' + file;
+          file = dir + '/' + file;
           
           // determine if file or directory
           fs.stat(file, function(err, stat) {
@@ -150,7 +150,7 @@
         });
       });
       
-    } // end _this.recurse()
+    }; // end _this.recurse()
     
     this.build_and_compile = function(){  // builds a flat list of folders recursively
       
@@ -176,7 +176,7 @@
           
       }
       
-    } // end _this.build_and_compile()
+    }; // end _this.build_and_compile()
     
     
     this.watch = function(){
@@ -190,10 +190,12 @@
         _this.names   = [];
         _this.folders = [];
         for(var f = 0; f < _this.config.folders.length; f++)
-          for(named in _this.config.folders[f]){
+          for(var named in _this.config.folders[f]){
+            if(_this.config.folders[f][named]){
             _this.folders.push(_this.config.folders[f][named]);
             _this.names.push(named);
           }
+        }
       
       } else 
         _this.folders = [_this.config.folders];

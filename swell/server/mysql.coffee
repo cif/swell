@@ -2,6 +2,7 @@
 class Mysql
   
   mysql = require 'mysql'
+  moment = require 'moment'
   
   # connection and database as args
   constructor: (@collection) ->
@@ -40,8 +41,8 @@ class Mysql
     
     if options.order
       query += ' ORDER BY ' + options.order
-    else if @collection.sort
-      query += ' ORDER BY ' + @collection.sort
+    else if @collection.sort_by
+      query += ' ORDER BY ' + @collection.sort_by
     
     if options.limit
       query += ' LIMIT ' + options.limit  
@@ -61,8 +62,8 @@ class Mysql
           if callback
             callback null, results
     
-  ### get a single record by id  
-  get: (id, key, @collection.store, callback) =>
+  # get a single record by id  
+  get: (id, callback) =>
     
     @db.query 'SELECT * FROM ' + @collection.store + ' WHERE ' + key + ' = ' + @db.escape(id), (err, rows, fields) =>
       if err
@@ -77,10 +78,7 @@ class Mysql
         callback null, false  
     
   # insert new records
-  insert: (object, key, @collection.store, callback) =>
-    
-    # generate an id
-    object[key] = @uuid()
+  insert: (object, callback) =>
     
     # @collection.store the object
     @db.query 'INSERT INTO ' + @collection.store + ' SET ?', object, (err, res) ->
@@ -91,23 +89,19 @@ class Mysql
         callback null, res
   
   # update existing records
-  update: (object, key, @collection.store, callback) =>
-    
-    # avoid setting the key value
-    id = object[key]
-    delete object[key]
+  update: (object, callback) =>
     
     # udpate
     @db.query 'UPDATE ' + @collection.store + ' SET ? WHERE ' + key + ' = ' + @db.escape(id), object, callback
        
   
   # delete a record
-  destroy: (id, key, @collection.store, callback) =>
+  destroy: (id,  callback) =>
     @db.query 'DELETE FROM ' + @collection.store + ' WHERE ' + key + ' = ' + @db.escape(id), callback
   
 
   # increment / decrement
-  bump: (@collection.store, field, value, key, id, callback) =>
+  bump: (field, value, id, callback) =>
     @db.query 'UPDATE ' + @collection.store + ' SET '+field+'='+field+'+'+value+' WHERE ' + key + ' = ' + @db.escape(id), callback
 
   # raw query. 'nuff said.  # make sure you esacape your query values before using this function!!
@@ -129,7 +123,7 @@ class Mysql
     
   
   # NOT IN USE JUST YET ...
-  # stringify() - turns anything that isn't a string into JSON
+  # stringify() - turns anything that isn't a string, number or valid data type into JSON
   # this can happen if you have a valid key (field name) who's value is an object or array (common ORM pitfall)
   stringify: (object) =>
     for prop,value of object
@@ -146,7 +140,7 @@ class Mysql
     string_or_object  
     
   # gets the fields out of a table @collection.store to prevent undefined column errors when "oversaving" objects  
-  describe: (@collection.store, callback) =>
+  describe: (callback) =>
     @db.query 'DESC ' + @collection.store, (err, rows, fields) ->
       if err
         callback err

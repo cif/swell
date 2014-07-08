@@ -1,4 +1,4 @@
-// last compiled: 2014-05-22 08:05:62
+// last compiled: 2014-06-08 09:06:71
 
 var swell = {};
 var models = {};
@@ -385,6 +385,25 @@ swell.Router = (function() {
   return Router;
 
 })();
+models.Book = (function() {
+
+  __extends(Book, swell.Model);
+
+  function Book() {
+    Book.__super__.constructor.apply(this, arguments);
+  }
+
+  Book.prototype.has_many = [collections.Chapters];
+
+  Book.prototype.fields = {
+    title: {
+      type: 'string'
+    }
+  };
+
+  return Book;
+
+})();
 models.Example = (function() {
 
   __extends(Example, swell.Model);
@@ -404,10 +423,11 @@ models.Example = (function() {
     },
     color: {
       type: 'string',
-      length: 6
+      maxlength: 6
     },
     sort_order: {
       type: 'number',
+      expr: /^#([0-9a-f]{3}|[0-9a-f]{6})$/,
       length: 2
     },
     start_date: {
@@ -422,6 +442,17 @@ models.Example = (function() {
   };
 
   return Example;
+
+})();
+collections.Chapters = (function() {
+
+  __extends(Chapters, swell.Collection);
+
+  function Chapters() {
+    Chapters.__super__.constructor.apply(this, arguments);
+  }
+
+  return Chapters;
 
 })();
 collections.Examples = (function() {
@@ -442,7 +473,7 @@ collections.Examples = (function() {
 
   Examples.prototype.sort_by = 'sort_order';
 
-  Examples.prototype.list = ['_id', 'name'];
+  Examples.prototype.list = ['_id', 'name', 'color'];
 
   return Examples;
 
@@ -457,8 +488,15 @@ routers.Application = (function() {
   }
 
   Application.prototype.initialize = function() {
+    var example, test;
     this.helpers = new views.Helpers();
     this.examples = new routers.Examples(this);
+    test = {
+      color: '#c00'
+    };
+    example = new models.Example(test);
+    example.url = '/examples/';
+    example.save();
     console.log('[swell] app initialized. ' + moment().format('YYYY-MM-DD HH:mm:ss'));
     return Backbone.history.start();
   };
@@ -485,8 +523,18 @@ routers.Examples = (function() {
     'test': 'test'
   };
 
+  Examples.prototype.collection = new collections.Examples;
+
   Examples.prototype.test = function() {
-    return console.log('hurray!');
+    var _this = this;
+    return this.collection.fetch({
+      success: function(data) {
+        return console.log(data);
+      },
+      error: function(nope) {
+        return console.log(error);
+      }
+    });
   };
 
   return Examples;
