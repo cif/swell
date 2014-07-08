@@ -1,8 +1,9 @@
 {
-  "name": "New Swell App",
-  "about": "About the awesome application",
+  "name": "A New Swell App",
+  "about": "About your app",
   "author": "you@email.com",
-  "version": "0.1 BETA",
+  "version": "0.1",
+  "swell": ">= 0.1",
   "client": {
     "compiler": "coffee",
     "folders": [
