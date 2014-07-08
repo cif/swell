@@ -1,4 +1,4 @@
 swell
 =============
 
-Isomorphic development with coffeescript
+Isomorphic development with node.js and a wee bit of coffescript shortcutting
