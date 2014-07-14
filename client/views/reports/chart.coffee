@@ -2,13 +2,24 @@
 class ReportsChart extends Backbone.View
   
   
-  el: ''
+  el: '.main'
   
-  reservation_fees: =>
+  initialize: (@router) =>
+    
+  
+  render: (name) =>
+    console.log 'doing it?'
+    dust.render 'reports.chart', name:name, (err, html) =>
+      @$el.html html
+      if name is 'reservation_fees'
+        @reservation_fees(name)
+      
+    
+  reservation_fees: (which) =>
     
     # charts fun
-    context = document.getElementById('revenue').getContext("2d")
-    app.helpers.ajax '/statements/annual/', (err, data) =>
+    context = document.getElementById('chart').getContext("2d")
+    @router.app.helpers.ajax '/statements/annual/', (err, data) =>
       draw = 
         labels:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
         datasets: []

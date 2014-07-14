@@ -4,10 +4,15 @@ class Reports extends swell.Router
   
   routes:
     'reports' : 'reports'
-  
+    'reports/:which' : 'reports'
+    
   collection: new collections.Examples
+  
+  init: =>
+    @view = new views.reports.ReportsChart @
     
-  reports: (which) =>
-    console.log 'why is my router fucked?'
-    console.log which
+  reports: (which='reservation_fees') =>
+    @view.render(which)
     
+    
+   

@@ -1,4 +1,4 @@
-// last compiled: 2014-07-14 14:07:74
+// last compiled: 2014-07-14 15:07:10
 
 var swell = {};
 var models = {};
@@ -407,7 +407,8 @@ swell.Router = (function() {
   __extends(Router, Backbone.Router);
 
   function Router() {
-    this.undelegate = __bind(this.undelegate, this);
+    this.bind = __bind(this.bind, this);
+    this.unbind = __bind(this.unbind, this);
     this.delegate = __bind(this.delegate, this);
     this.init = __bind(this.init, this);
     this.initialize = __bind(this.initialize, this);
@@ -415,25 +416,48 @@ swell.Router = (function() {
   }
 
   Router.prototype.initialize = function(app) {
-    app.register(this);
+    this.app = app;
+    this.app.register(this);
     this.init.apply(this, arguments);
+    this.on('all', this.delegate);
     return this;
   };
 
   Router.prototype.init = function() {};
 
-  Router.prototype.delegate = function() {
-    this.undelegate();
-    this.bind();
-    this.form.delegateEvents();
-    this.list.delegateEvents();
-    return this.app.controller = this;
+  Router.prototype.delegate = function(route) {
+    this.app.undelegate(route);
+    return this.bind(route);
   };
 
-  Router.prototype.undelegate = function() {
-    this.unbind();
-    this.form.undelegateEvents();
-    return this.list.undelegateEvents();
+  Router.prototype.unbind = function(route) {
+    var obj, prop, _results;
+    console.log('[swell] unbinding: ' + route + ' ' + moment().format('YYYY-MM-DD HH:mm:ss'));
+    _results = [];
+    for (prop in this) {
+      obj = this[prop];
+      if (obj.undelegateEvents) {
+        _results.push(obj.undelegateEvents());
+      } else {
+        _results.push(void 0);
+      }
+    }
+    return _results;
+  };
+
+  Router.prototype.bind = function(route) {
+    var obj, prop, _results;
+    console.log('[swell] binding: ' + route + ' ' + moment().format('YYYY-MM-DD HH:mm:ss'));
+    _results = [];
+    for (prop in this) {
+      obj = this[prop];
+      if (obj.delegateEvents) {
+        _results.push(obj.delegateEvents());
+      } else {
+        _results.push(void 0);
+      }
+    }
+    return _results;
   };
 
   return Router;
@@ -589,6 +613,7 @@ routers.Application = (function() {
   __extends(Application, Backbone.Router);
 
   function Application() {
+    this.undelegate = __bind(this.undelegate, this);
     this.register = __bind(this.register, this);
     this.main = __bind(this.main, this);
     Application.__super__.constructor.apply(this, arguments);
@@ -596,10 +621,10 @@ routers.Application = (function() {
 
   Application.prototype.initialize = function() {
     this.helpers = new views.Helpers;
-    this.user = new models.User;
     this.reports = new routers.Reports(this);
+    this.examples = new routers.Examples(this);
     Backbone.history.start();
-    console.log('[swell] app initialized. ' + moment().format('YYYY-MM-DD HH:mm:ss'));
+    console.log('[swell] app instantiated as window.app ' + moment().format('YYYY-MM-DD HH:mm:ss'));
     return this;
   };
 
@@ -609,6 +634,17 @@ routers.Application = (function() {
 
   Application.prototype.register = function(router) {
     return this.routers.push(router);
+  };
+
+  Application.prototype.undelegate = function(route) {
+    var router, _i, _len, _ref, _results;
+    _ref = this.routers;
+    _results = [];
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      router = _ref[_i];
+      _results.push(router.unbind(route));
+    }
+    return _results;
   };
 
   return Application;
@@ -650,18 +686,24 @@ routers.Reports = (function() {
 
   function Reports() {
     this.reports = __bind(this.reports, this);
+    this.init = __bind(this.init, this);
     Reports.__super__.constructor.apply(this, arguments);
   }
 
   Reports.prototype.routes = {
-    'reports': 'reports'
+    'reports': 'reports',
+    'reports/:which': 'reports'
   };
 
   Reports.prototype.collection = new collections.Examples;
 
+  Reports.prototype.init = function() {
+    return this.view = new views.reports.ReportsChart(this);
+  };
+
   Reports.prototype.reports = function(which) {
-    console.log('why is my router fucked?');
-    return console.log(which);
+    if (which == null) which = 'reservation_fees';
+    return this.view.render(which);
   };
 
   return Reports;
@@ -741,16 +783,33 @@ views.reports.ReportsChart = (function() {
 
   function ReportsChart() {
     this.reservation_fees = __bind(this.reservation_fees, this);
+    this.render = __bind(this.render, this);
+    this.initialize = __bind(this.initialize, this);
     ReportsChart.__super__.constructor.apply(this, arguments);
   }
 
-  ReportsChart.prototype.el = '';
+  ReportsChart.prototype.el = '.main';
 
-  ReportsChart.prototype.reservation_fees = function() {
+  ReportsChart.prototype.initialize = function(router) {
+    this.router = router;
+  };
+
+  ReportsChart.prototype.render = function(name) {
+    var _this = this;
+    console.log('doing it?');
+    return dust.render('reports.chart', {
+      name: name
+    }, function(err, html) {
+      _this.$el.html(html);
+      if (name === 'reservation_fees') return _this.reservation_fees(name);
+    });
+  };
+
+  ReportsChart.prototype.reservation_fees = function(which) {
     var context;
     var _this = this;
-    context = document.getElementById('revenue').getContext("2d");
-    return app.helpers.ajax('/statements/annual/', function(err, data) {
+    context = document.getElementById('chart').getContext("2d");
+    return this.router.app.helpers.ajax('/statements/annual/', function(err, data) {
       var chart, colors, draw, index, month, months, set, year, years, _i, _j, _len, _len2;
       draw = {
         labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
