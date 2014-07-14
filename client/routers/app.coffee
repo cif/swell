@@ -2,29 +2,43 @@
 class Application extends Backbone.Router
   
   
+  # setting a default route avoids history.start() error,
+  # note if you have other routers with routes exposed, 
+  # keep this commented out
+  #routes:  
+  #  '' : 'main' 
+  
   initialize: -> 
     
-    # initialize view helpers
-    @helpers = new views.Helpers()
+    # initialize helpers and high level objects
+    @helpers = new views.Helpers
+    @user = new models.User 
     
-    # initialize your application's routers here.
-    @examples = new routers.Examples @
     
-    test = 
-      # name: 'Testing 12345'
-      color: '#c00'
-      
-    example = new models.Example test
-    example.url = '/examples/'
-    example.save()
-      
+    # initialize any app routers here
+    @reports = new routers.Reports @
+    
+    
     # start the party
-    console.log '[swell] app initialized. ' + moment().format('YYYY-MM-DD HH:mm:ss')
     Backbone.history.start()
+    console.log '[swell] app initialized. ' + moment().format('YYYY-MM-DD HH:mm:ss')
+    
+    
+    # return the app instance
+    return @
     
   
+  main: =>
+    # @user.call '/users/authenticate', (err, data) =>
+      # etc..
+  
+  
   # allows registration of routers for app wide undelegation
-  # this frees up memory (big time) in larger, multi-view applications
+  # required to free up memory (big time!) in larger, multi-view applications
   routers:[]
   register: (router) =>
     @routers.push router
+    
+  
+  
+    

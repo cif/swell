@@ -10,7 +10,11 @@
   
  var app, service, config, socket;  
  var render = require('./render'); 
- var formidable = require('formidable'); // used in place of express's soon to be deprecated bodyParser() middleware
+ 
+ // this is used in place of express' 
+ // soon to be deprecated bodyParser() middleware
+ var formidable = require('formidable'); 
+ 
  var setup = function(_app, _socket, _config){
   
    app = _app;
@@ -34,11 +38,11 @@
    
    // match the reqest url to a route
    var url = req.url;
-   if(url.indexOf('?') >= 0) url = url.substring(0, url.indexOf('?')); // dont match any query sring parameters
+   if(url.indexOf('?') >= 0) url = url.substring(0, url.indexOf('?'));  // dont match any query sring parameters
    for(route in config.server.routes){
 
      // replace the string arguments with wildcards for matching the method we are trying to call.
-     // TODO: really should support splats, but routing isn't that common anyway
+     // TODO: should support splats, but routing isn't that common these days, naming conventions work fine.
      regex_string = '^' + route.replace(/\:(.*)/g,'(.*)') + '$'
      wild = new RegExp(regex_string);
      if(url.match(wild)){
@@ -85,7 +89,8 @@
        
        // parse any incoming form data
        var form = new formidable.IncomingForm();
-       
+       var uri_args;
+     
        form.parse(req, function(err, fields, files) {
          
          if(err) render.out(new Error('[swell-router] failed to parse request body: ' + err.getMessage()), false, false, res);
@@ -109,12 +114,9 @@
            }
          }
          
+         // default to type GET, PUT, POST, DELETE etc.
          if(!control[method]){ 
-           
-           method = call_by_type.toLowerCase();  // default to type GET, PUT, POST, DELETE etc.
-           uri_parts = req.url.split('/');       // assume any second argument is an object identifier
-           if(uri_parts[2]) req.data.id = uri_parts[2];
-           
+           method = call_by_type.toLowerCase();  
          }
          
          // call before on the reponder
@@ -123,11 +125,17 @@
          }
        
          // adjust the arguments and call the responder
-         var args = [req, function(err, data, emit){
+         uri_args = req.url.split('/');  
+         uri_args.shift();
+         uri_args.shift();
+         
+         var method_args = [req, function(err, data, emit){
            var data = data || {};
-           render.out(err, data, emit, res, control.after);
-         }];
-         control[method].apply(null, args);
+           render.out(err, data, emit, res, control.after); // this is the final callback to the renderer.
+         }].concat(uri_args);
+         
+         // call the controller method
+         control[method].apply(null, method_args);
        
        });
        

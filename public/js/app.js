@@ -1,4 +1,4 @@
-// last compiled: 2014-06-08 09:06:71
+// last compiled: 2014-07-14 14:07:74
 
 var swell = {};
 var models = {};
@@ -7,6 +7,7 @@ var routers = {};
 var views = {};
     views.forms = {};
     views.lists = {};
+    views.reports = {};
 
 __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
 __hasProp = {}.hasOwnProperty,
@@ -334,16 +335,69 @@ swell.Model = (function() {
   __extends(Model, Backbone.Model);
 
   function Model() {
-    this.validate_fields = __bind(this.validate_fields, this);
+    this.call = __bind(this.call, this);
+    this["delete"] = __bind(this["delete"], this);
+    this.push = __bind(this.push, this);
+    this.pull = __bind(this.pull, this);
+    this.init = __bind(this.init, this);
+    this.initialize = __bind(this.initialize, this);
+    this.sanitize = __bind(this.sanitize, this);
     this.validate = __bind(this.validate, this);
     Model.__super__.constructor.apply(this, arguments);
   }
 
   Model.prototype.validate = function(attrs) {
-    if (this.fields) return this.validate_fields(attrs);
+    if (this.fields) return this.sanitize(attrs);
   };
 
-  Model.prototype.validate_fields = function(attrs) {};
+  Model.prototype.sanitize = function(attrs) {};
+
+  Model.prototype.initialize = function() {
+    var _this = this;
+    this.response_callback = {
+      success: function(data) {
+        console.info('swell.Model sync returned: ', _this.attributes);
+        return _this.callback(null, data);
+      },
+      error: function(error) {
+        console.error('swell.Model sync error: ' + error.responseText);
+        return _this.callback(error.responseText);
+      }
+    };
+    this.init.apply(this, arguments);
+    return this;
+  };
+
+  Model.prototype.init = function() {
+    return this;
+  };
+
+  Model.prototype.pull = function(callback, options) {
+    this.callback = callback;
+    options = _.extend(this.response_callback, options);
+    return this.fetch(options);
+  };
+
+  Model.prototype.push = function(callback, options) {
+    this.callback = callback;
+    options = _.extend(this.response_callback, options);
+    return this.save(null, options);
+  };
+
+  Model.prototype["delete"] = function(callback, options) {
+    this.callback = callback;
+    options = _.extend(this.response_callback, options);
+    return this.destroy(options);
+  };
+
+  Model.prototype.call = function(url, callback, options, method) {
+    this.callback = callback;
+    if (method == null) method = 'POST';
+    options = _.extend(this.response_callback, options);
+    options.url = url;
+    options.type = method;
+    return $.ajax(options);
+  };
 
   return Model;
 
@@ -444,15 +498,32 @@ models.Example = (function() {
   return Example;
 
 })();
-collections.Chapters = (function() {
+models.User = (function() {
 
-  __extends(Chapters, swell.Collection);
+  __extends(User, swell.Model);
 
-  function Chapters() {
-    Chapters.__super__.constructor.apply(this, arguments);
+  function User() {
+    User.__super__.constructor.apply(this, arguments);
   }
 
-  return Chapters;
+  User.prototype.key = 'id';
+
+  return User;
+
+})();
+collections.Accounts = (function() {
+
+  __extends(Accounts, swell.Collection);
+
+  function Accounts() {
+    Accounts.__super__.constructor.apply(this, arguments);
+  }
+
+  Accounts.prototype.resource = 'mysql';
+
+  Accounts.prototype.expose_rest = true;
+
+  return Accounts;
 
 })();
 collections.Examples = (function() {
@@ -467,7 +538,7 @@ collections.Examples = (function() {
 
   Examples.prototype.url = '/examples/';
 
-  Examples.prototype.resource = 'mysql-example';
+  Examples.prototype.resource = 'mongo-example-bad';
 
   Examples.prototype.store = 'examples';
 
@@ -478,28 +549,61 @@ collections.Examples = (function() {
   return Examples;
 
 })();
+collections.Statements = (function() {
+
+  __extends(Statements, swell.Collection);
+
+  function Statements() {
+    this.grouped_dates = __bind(this.grouped_dates, this);
+    Statements.__super__.constructor.apply(this, arguments);
+  }
+
+  Statements.prototype.resource = 'mysql';
+
+  Statements.prototype.store = 'statements';
+
+  Statements.prototype.grouped_dates = function() {};
+
+  return Statements;
+
+})();
+collections.Users = (function() {
+
+  __extends(Users, swell.Collection);
+
+  function Users() {
+    Users.__super__.constructor.apply(this, arguments);
+  }
+
+  Users.prototype.resource = 'mysql';
+
+  Users.prototype.store = 'users';
+
+  Users.prototype.list = ['id', 'name', 'username', 'email'];
+
+  return Users;
+
+})();
 routers.Application = (function() {
 
   __extends(Application, Backbone.Router);
 
   function Application() {
     this.register = __bind(this.register, this);
+    this.main = __bind(this.main, this);
     Application.__super__.constructor.apply(this, arguments);
   }
 
   Application.prototype.initialize = function() {
-    var example, test;
-    this.helpers = new views.Helpers();
-    this.examples = new routers.Examples(this);
-    test = {
-      color: '#c00'
-    };
-    example = new models.Example(test);
-    example.url = '/examples/';
-    example.save();
+    this.helpers = new views.Helpers;
+    this.user = new models.User;
+    this.reports = new routers.Reports(this);
+    Backbone.history.start();
     console.log('[swell] app initialized. ' + moment().format('YYYY-MM-DD HH:mm:ss'));
-    return Backbone.history.start();
+    return this;
   };
+
+  Application.prototype.main = function() {};
 
   Application.prototype.routers = [];
 
@@ -540,12 +644,59 @@ routers.Examples = (function() {
   return Examples;
 
 })();
+routers.Reports = (function() {
+
+  __extends(Reports, swell.Router);
+
+  function Reports() {
+    this.reports = __bind(this.reports, this);
+    Reports.__super__.constructor.apply(this, arguments);
+  }
+
+  Reports.prototype.routes = {
+    'reports': 'reports'
+  };
+
+  Reports.prototype.collection = new collections.Examples;
+
+  Reports.prototype.reports = function(which) {
+    console.log('why is my router fucked?');
+    return console.log(which);
+  };
+
+  return Reports;
+
+})();
 views.Helpers = (function() {
 
-  function Helpers() {}
+  function Helpers() {
+    this.ajax = __bind(this.ajax, this);
+    this.test_dust_helper = __bind(this.test_dust_helper, this);
+    var _this = this;
+    _.extend(dust.helpers, this);
+    this.response_callback = {
+      success: function(data) {
+        console.info('swell.Helpers ajax returned: ', _this.attributes);
+        return _this.callback(null, data);
+      },
+      error: function(error) {
+        console.error('swell.Helpers ajax error: ' + error.responseText);
+        return _this.callback(error.responseText);
+      }
+    };
+  }
 
-  Helpers.prototype.something = function() {
-    return console.log('cool');
+  Helpers.prototype.test_dust_helper = function(chunk, ctx, bodies, params) {
+    return chunk.write('my custom helper works!');
+  };
+
+  Helpers.prototype.ajax = function(url, callback, options, method) {
+    this.callback = callback;
+    if (method == null) method = 'POST';
+    options = _.extend(this.response_callback, options);
+    options.url = url;
+    options.type = method;
+    return $.ajax(options);
   };
 
   return Helpers;
@@ -562,6 +713,17 @@ views.forms.ExampleForm = (function() {
   return ExampleForm;
 
 })();
+views.forms.Login = (function() {
+
+  __extends(Login, swell.Form);
+
+  function Login() {
+    Login.__super__.constructor.apply(this, arguments);
+  }
+
+  return Login;
+
+})();
 views.lists.ExampleList = (function() {
 
   __extends(ExampleList, swell.List);
@@ -571,5 +733,59 @@ views.lists.ExampleList = (function() {
   }
 
   return ExampleList;
+
+})();
+views.reports.ReportsChart = (function() {
+
+  __extends(ReportsChart, Backbone.View);
+
+  function ReportsChart() {
+    this.reservation_fees = __bind(this.reservation_fees, this);
+    ReportsChart.__super__.constructor.apply(this, arguments);
+  }
+
+  ReportsChart.prototype.el = '';
+
+  ReportsChart.prototype.reservation_fees = function() {
+    var context;
+    var _this = this;
+    context = document.getElementById('revenue').getContext("2d");
+    return app.helpers.ajax('/statements/annual/', function(err, data) {
+      var chart, colors, draw, index, month, months, set, year, years, _i, _j, _len, _len2;
+      draw = {
+        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+        datasets: []
+      };
+      years = {};
+      colors = ['red', 'blue', 'green', 'orange'];
+      for (_i = 0, _len = data.length; _i < _len; _i++) {
+        month = data[_i];
+        month.color = colors[_i];
+        if (!years[month.year]) years[month.year] = [];
+        years[month.year].push(month);
+      }
+      index = 0;
+      for (year in years) {
+        months = years[year];
+        set = {
+          label: year + ' Res Fees',
+          strokeColor: colors[index],
+          fillColor: 'transparent',
+          data: []
+        };
+        for (_j = 0, _len2 = months.length; _j < _len2; _j++) {
+          month = months[_j];
+          set.data.push(month.res_fees);
+        }
+        draw.datasets.push(set);
+        index++;
+        index++;
+      }
+      console.log(draw);
+      return chart = new Chart(context).Line(draw, false);
+    });
+  };
+
+  return ReportsChart;
 
 })();

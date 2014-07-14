@@ -57,12 +57,12 @@
         "host" : "127.0.0.1",
         "port":"27017"
       },
-      "mysql-example" : {
+      "mysql" : {
         "engine" : "mysql",
-        "db" : "swell",
-        "host" : "127.0.0.1",
-        "user" : "swell",
-        "password" : "sw311!"
+        "db" : "flybook",
+        "host" : "216.228.174.155",
+        "user" : "fb-test",
+        "password" : "3XAmPl3!"
       }
     },
     "coffee": {
@@ -86,6 +86,7 @@
       "exports" : true
     },
     "views":"views",
+    "layout":"layouts/app",
     "port": "3030",
     "timeout" : 3000,
     "cookie_hash" : "cookie-hash-you-should-change",

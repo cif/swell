@@ -1,4 +1,4 @@
-// last compiled: 2014-06-08 10:06:97
+// last compiled: 2014-07-14 14:07:96
 
 var swell = {};
 var models = {};
@@ -11,6 +11,8 @@ __extends = function(child, parent) { for (var key in parent) { if (__hasProp.ca
 
 swell.Collection = (function() {
 
+  Collection.prototype.key = 'id';
+
   Collection.prototype.sort = 'sort_order';
 
   function Collection(config, callback) {
@@ -22,18 +24,21 @@ swell.Collection = (function() {
     this.where = __bind(this.where, this);
     this.fetch = __bind(this.fetch, this);
     var _this = this;
-    this.data = config.server.resources[this.resource];
-    if (this.data.engine === 'mongo') this.db = new swell.Mongo(this);
-    if (this.data.engine === 'mysql') this.db = new swell.Mysql(this);
-    if (this.data.engine === 'mysql') {
-      this.db.use(function(err, res) {
-        if (err) callback(err);
-        return callback(null, _this);
-      });
-    } else if (this.db) {
-      callback(null, this);
+    if (this.data = config.server.resources[this.resource]) {
+      if (this.data.engine === 'mongo') this.db = new swell.Mongo(this);
+      if (this.data.engine === 'mysql') this.db = new swell.Mysql(this);
+      if (this.data.engine === 'mysql') {
+        this.db.use(function(err, res) {
+          if (err) callback(err);
+          return callback(null, _this);
+        });
+      } else if (this.db) {
+        callback(null, this);
+      } else {
+        callback('[swell] could not connect to data source "' + this.resource + '" :' + JSON.stringify(this.data));
+      }
     } else {
-      callback('[swell] could not connect to data source "' + this.resource + '" :' + JSON.stringify(this.data));
+      callback('[swell] your collection is attempting to locate an unspecified data resource "' + this.resource + '". Define it in your configuration.');
     }
   }
 
@@ -50,11 +55,14 @@ swell.Collection = (function() {
   };
 
   Collection.prototype.get = function(id, callback) {
-    return this.db.get(id, callback);
+    return this.db.get(this.key, id, callback);
   };
 
   Collection.prototype.add = function(data, callback) {
     var cleaned;
+    if (typeof this.model !== 'function') {
+      return callback('[swell] a model must be specified to use REST features');
+    }
     this.model = new this.model(data);
     cleaned = this.model.validate(data);
     console.log(typeof cleaned);
@@ -65,11 +73,11 @@ swell.Collection = (function() {
   };
 
   Collection.prototype.update = function(data, callback) {
-    return this.db.update(data, callback);
+    return this.db.update(this.key, data, callback);
   };
 
   Collection.prototype.remove = function(data, callback) {
-    return this.db.destroy(data, callback);
+    return this.db.destroy(this.key, data, callback);
   };
 
   Collection.prototype.pare = function(res) {
@@ -709,7 +717,7 @@ swell.Mysql = (function() {
     });
   };
 
-  Mysql.prototype.get = function(id, callback) {
+  Mysql.prototype.get = function(key, id, callback) {
     var _this = this;
     return this.db.query('SELECT * FROM ' + this.collection.store + ' WHERE ' + key + ' = ' + this.db.escape(id), function(err, rows, fields) {
       var prop, res, value;
@@ -738,15 +746,15 @@ swell.Mysql = (function() {
     });
   };
 
-  Mysql.prototype.update = function(object, callback) {
+  Mysql.prototype.update = function(key, object, callback) {
     return this.db.query('UPDATE ' + this.collection.store + ' SET ? WHERE ' + key + ' = ' + this.db.escape(id), object, callback);
   };
 
-  Mysql.prototype.destroy = function(id, callback) {
+  Mysql.prototype.destroy = function(key, id, callback) {
     return this.db.query('DELETE FROM ' + this.collection.store + ' WHERE ' + key + ' = ' + this.db.escape(id), callback);
   };
 
-  Mysql.prototype.bump = function(field, value, id, callback) {
+  Mysql.prototype.bump = function(key, field, value, id, callback) {
     return this.db.query('UPDATE ' + this.collection.store + ' SET ' + field + '=' + field + '+' + value + ' WHERE ' + key + ' = ' + this.db.escape(id), callback);
   };
 
@@ -754,7 +762,7 @@ swell.Mysql = (function() {
     var results;
     results = [];
     return this.db.query(query, function(err, rows, fields) {
-      var prop, row, value, _i, _len;
+      var row, _i, _len;
       if (err) {
         return callback(err);
       } else {
@@ -763,10 +771,6 @@ swell.Mysql = (function() {
         } else {
           for (_i = 0, _len = rows.length; _i < _len; _i++) {
             row = rows[_i];
-            for (prop in row) {
-              value = row[prop];
-              row[prop] = this.objectify(value);
-            }
             results.push(row);
           }
           if (callback) return callback(null, results);
@@ -893,6 +897,7 @@ swell.Responder = (function() {
     }
     return new this.collection(this.config, function(err, collection) {
       _this.collection = collection;
+      if (err) return callback(err);
       return _this.collection.add(request.data, callback);
     });
   };
@@ -909,6 +914,7 @@ swell.Responder = (function() {
     }
     return new this.collection(this.config, function(err, collection) {
       _this.collection = collection;
+      if (err) return callback(err);
       return _this.collection.update(request.data, callback);
     });
   };
@@ -925,6 +931,7 @@ swell.Responder = (function() {
     }
     return new this.collection(this.config, function(err, collection) {
       _this.collection = collection;
+      if (err) return callback(err);
       return _this.collection.remove(request.data, callback);
     });
   };
@@ -991,15 +998,32 @@ models.Example = (function() {
   return Example;
 
 })();
-collections.Chapters = (function() {
+models.User = (function() {
 
-  __extends(Chapters, swell.Collection);
+  __extends(User, swell.Model);
 
-  function Chapters() {
-    Chapters.__super__.constructor.apply(this, arguments);
+  function User() {
+    User.__super__.constructor.apply(this, arguments);
   }
 
-  return Chapters;
+  User.prototype.key = 'id';
+
+  return User;
+
+})();
+collections.Accounts = (function() {
+
+  __extends(Accounts, swell.Collection);
+
+  function Accounts() {
+    Accounts.__super__.constructor.apply(this, arguments);
+  }
+
+  Accounts.prototype.resource = 'mysql';
+
+  Accounts.prototype.expose_rest = true;
+
+  return Accounts;
 
 })();
 collections.Examples = (function() {
@@ -1014,7 +1038,7 @@ collections.Examples = (function() {
 
   Examples.prototype.url = '/examples/';
 
-  Examples.prototype.resource = 'mysql-example';
+  Examples.prototype.resource = 'mongo-example-bad';
 
   Examples.prototype.store = 'examples';
 
@@ -1023,6 +1047,41 @@ collections.Examples = (function() {
   Examples.prototype.list = ['_id', 'name', 'color'];
 
   return Examples;
+
+})();
+collections.Statements = (function() {
+
+  __extends(Statements, swell.Collection);
+
+  function Statements() {
+    this.grouped_dates = __bind(this.grouped_dates, this);
+    Statements.__super__.constructor.apply(this, arguments);
+  }
+
+  Statements.prototype.resource = 'mysql';
+
+  Statements.prototype.store = 'statements';
+
+  Statements.prototype.grouped_dates = function() {};
+
+  return Statements;
+
+})();
+collections.Users = (function() {
+
+  __extends(Users, swell.Collection);
+
+  function Users() {
+    Users.__super__.constructor.apply(this, arguments);
+  }
+
+  Users.prototype.resource = 'mysql';
+
+  Users.prototype.store = 'users';
+
+  Users.prototype.list = ['id', 'name', 'username', 'email'];
+
+  return Users;
 
 })();
 responders.Examples = (function() {
@@ -1079,6 +1138,63 @@ responders.Pages = (function() {
   };
 
   return Pages;
+
+})();
+responders.Statements = (function() {
+  var async, fs;
+
+  __extends(Statements, swell.Responder);
+
+  function Statements() {
+    this.annual = __bind(this.annual, this);
+    Statements.__super__.constructor.apply(this, arguments);
+  }
+
+  fs = require('fs');
+
+  async = require('async');
+
+  Statements.prototype.expose_rest = true;
+
+  Statements.prototype.collection = collections.Statements;
+
+  Statements.prototype.annual = function(req, callback) {
+    var _this = this;
+    return new this.collection(this.config, function(err, collection) {
+      _this.collection = collection;
+      return _this.collection.db.query('SELECT YEAR(date) as year, MONTHNAME(date) as month, SUM(total) as total, SUM(reservation_fees) as res_fees, SUM(service_fees) as serv_fees FROM statements GROUP BY YEAR(date), MONTH(date)', function(err, res) {
+        if (err) callback(err);
+        return callback(null, res);
+      });
+    });
+  };
+
+  return Statements;
+
+})();
+responders.Users = (function() {
+
+  __extends(Users, swell.Responder);
+
+  function Users() {
+    this.authenticate = __bind(this.authenticate, this);
+    this.before = __bind(this.before, this);
+    Users.__super__.constructor.apply(this, arguments);
+  }
+
+  Users.prototype.collection = collections.Users;
+
+  Users.prototype.expose_rest = true;
+
+  Users.prototype.before = function(req) {
+    return true;
+  };
+
+  Users.prototype.authenticate = function(req, callback) {
+    return callback('This is a custom error!');
+  };
+
+  return Users;
 
 })();
 exports.swell = swell;

@@ -1,0 +1,1 @@
+// TODO: node script that the copies the directory and deletes non-globals

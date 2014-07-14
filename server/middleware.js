@@ -34,6 +34,7 @@
     // basics
     app.use(express.urlencoded());
     app.use(express.json());
+    app.use(express.compress());
     
     // custom midedleware handlers. Example:
     /* 
@@ -42,10 +43,8 @@
      });
     */
     
-    // timeout, not sure this is working correctly, test ALL your responses!
+    // timeout, not sure this is working as indended... test ALL your responses!
     app.use(express.timeout(config.server.timeout));
-    
-    
     
   };
   

@@ -11,7 +11,7 @@
   var dust = require('dustjs-linkedin');
   var dustjs = require('adaro'); // used for rendering view with dust
   var showdown = require('showdown');
-  var converter = new showdown.converter(); // allows for markdown use within your dust templates
+  var converter = new showdown.converter(); // allows for markdown within dust templates
   var setup = function(_express, _app, _socket, _config){
   
     // scope varaiables
@@ -23,16 +23,17 @@
     dustjs.onLoad = preprocess;
     app.engine('dust', dustjs.dust({
       views:  config.base + config.server.views,
-      layout: "layouts/app",
+      layout: config.server.layout,
       cache: !config.watching
     }));
     app.set('view engine', 'dust');
     
     // server side view helpers
     dustjs.helpers.cache_buster = function(chunk, context, bodies, params) { return chunk.write(Math.round(Math.random() * 1000000)); };
-    
+    dustjs.helpers.svg = function(chunk, context, bodies, params) { return chunk.write(fs.readFileSync(config.base + '/public/svg/' + params.file + '.svg')); };
     
   }; // end setup()
+  
   
   var preprocess = function(name, context, callback){
     
@@ -40,12 +41,18 @@
     // converted to HTML before sending the dust template 
     // off to be compiled and rendered / mashed up
     var file = config.base + config.server.views + '/' + name + '.dust';
-    var tmpl = converter.makeHtml(fs.readFileSync(file,'utf8'));
+    var tmpl;
+    if(name === config.server.layout){   // dont markdown things in the main layout
+      tmpl = fs.readFileSync(file,'utf8');
+    } else {
+      tmpl = converter.makeHtml(fs.readFileSync(file,'utf8'));
+    } 
     callback(null, tmpl);
     
     //console.log(name, context, callback);
     
   }; // end preprocess()
+  
   
   var out = function(err, data, emit, res, callback){
     
@@ -61,9 +68,9 @@
       if(callback) callback.apply(null, data);
     
     
-    //  if data.unauthorized comes back
+    //  if data.denied comes back
     //  send it to the browser with 403 status  
-    } else if(data.unauthorized){
+    } else if(data.denied){
       
       res.set('Content-Type','text/plain');
       res.status(403);
@@ -102,7 +109,7 @@
         
       });
       
-    } else {  // just send the raw data
+    } else {  // just send raw json data
       
       res.header('Content-Type','application/json');
       res.status(200);

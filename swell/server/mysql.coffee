@@ -63,12 +63,10 @@ class Mysql
             callback null, results
     
   # get a single record by id  
-  get: (id, callback) =>
-    
+  get: (key, id, callback) =>
     @db.query 'SELECT * FROM ' + @collection.store + ' WHERE ' + key + ' = ' + @db.escape(id), (err, rows, fields) =>
       if err
         callback err
-      
       if rows and rows.length > 0
         res = rows[0]
         for prop,value of res
@@ -89,19 +87,19 @@ class Mysql
         callback null, res
   
   # update existing records
-  update: (object, callback) =>
+  update: (key, object, callback) =>
     
     # udpate
     @db.query 'UPDATE ' + @collection.store + ' SET ? WHERE ' + key + ' = ' + @db.escape(id), object, callback
        
   
   # delete a record
-  destroy: (id,  callback) =>
+  destroy: (key, id,  callback) =>
     @db.query 'DELETE FROM ' + @collection.store + ' WHERE ' + key + ' = ' + @db.escape(id), callback
   
 
   # increment / decrement
-  bump: (field, value, id, callback) =>
+  bump: (key, field, value, id, callback) =>
     @db.query 'UPDATE ' + @collection.store + ' SET '+field+'='+field+'+'+value+' WHERE ' + key + ' = ' + @db.escape(id), callback
 
   # raw query. 'nuff said.  # make sure you esacape your query values before using this function!!
@@ -115,11 +113,10 @@ class Mysql
           callback false  
         else
           for row in rows
-            for prop,value of row
-              row[prop] = @objectify(value)
+          #  for prop,value of row
+          #    row[prop] = @objectify(value)
             results.push row
-          if callback
-            callback null, results
+          callback null, results if callback
     
   
   # NOT IN USE JUST YET ...

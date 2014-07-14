@@ -47,18 +47,21 @@ class Responder
     return callback(null, unauthorized:true) if !@expose_rest
     return callback('[swell] A collection must specified to use REST features') if !@collection
     new @collection @config, (err, @collection) =>
+      return callback(err) if err
       @collection.add request.data, callback
     
   put: (request, callback) =>
     return callback(null, unauthorized:true) if !@expose_rest
     return callback('[swell] A collection must specified to use REST features') if !@collection
     new @collection @config, (err, @collection) =>
+      return callback(err) if err
       @collection.update request.data, callback
     
   delete: (request, callback) =>
     return callback(null, unauthorized:true) if !@expose_rest
     return callback('[swell] A collection must specified to use REST features') if !@collection
     new @collection @config, (err, @collection) =>
+      return callback(err) if err
       @collection.remove request.data, callback
   
   
