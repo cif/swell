@@ -1,4 +1,4 @@
-// last compiled: 2014-07-14 15:07:77
+// last compiled: 2014-07-17 19:07:50
 
 var swell = {};
 var models = {};
@@ -856,15 +856,15 @@ swell.Responder = (function() {
     return this;
   };
 
-  Responder.prototype.before = function(request) {
+  Responder.prototype.before = function(req) {
     return true;
   };
 
-  Responder.prototype.after = function(request) {
+  Responder.prototype.after = function(req) {
     return true;
   };
 
-  Responder.prototype.get = function(request, callback) {
+  Responder.prototype.get = function(req, callback) {
     var _this = this;
     if (!this.expose_rest) {
       return callback(null, {
@@ -877,15 +877,15 @@ swell.Responder = (function() {
     return new this.collection(this.config, function(err, collection) {
       _this.collection = collection;
       if (err) return callback(err);
-      if (request.data.id) {
-        return _this.collection.get(request.data.id, callback);
+      if (req.data.id) {
+        return _this.collection.get(req.data.id, callback);
       } else {
         return _this.collection.fetch(callback);
       }
     });
   };
 
-  Responder.prototype.post = function(request, callback) {
+  Responder.prototype.post = function(req, callback) {
     var _this = this;
     if (!this.expose_rest) {
       return callback(null, {
@@ -898,11 +898,11 @@ swell.Responder = (function() {
     return new this.collection(this.config, function(err, collection) {
       _this.collection = collection;
       if (err) return callback(err);
-      return _this.collection.add(request.data, callback);
+      return _this.collection.add(req.data, callback);
     });
   };
 
-  Responder.prototype.put = function(request, callback) {
+  Responder.prototype.put = function(req, callback) {
     var _this = this;
     if (!this.expose_rest) {
       return callback(null, {
@@ -915,11 +915,11 @@ swell.Responder = (function() {
     return new this.collection(this.config, function(err, collection) {
       _this.collection = collection;
       if (err) return callback(err);
-      return _this.collection.update(request.data, callback);
+      return _this.collection.update(req.data, callback);
     });
   };
 
-  Responder.prototype["delete"] = function(request, callback) {
+  Responder.prototype["delete"] = function(req, callback) {
     var _this = this;
     if (!this.expose_rest) {
       return callback(null, {
@@ -932,7 +932,7 @@ swell.Responder = (function() {
     return new this.collection(this.config, function(err, collection) {
       _this.collection = collection;
       if (err) return callback(err);
-      return _this.collection.remove(request.data, callback);
+      return _this.collection.remove(req.data, callback);
     });
   };
 
@@ -1038,7 +1038,7 @@ collections.Examples = (function() {
 
   Examples.prototype.url = '/examples/';
 
-  Examples.prototype.resource = 'mongo-example-bad';
+  Examples.prototype.resource = 'mysql';
 
   Examples.prototype.store = 'examples';
 
@@ -1089,7 +1089,8 @@ responders.Examples = (function() {
   __extends(Examples, swell.Responder);
 
   function Examples() {
-    this.colors = __bind(this.colors, this);
+    this.testing = __bind(this.testing, this);
+    this.color = __bind(this.color, this);
     Examples.__super__.constructor.apply(this, arguments);
   }
 
@@ -1097,7 +1098,7 @@ responders.Examples = (function() {
 
   Examples.prototype.expose_rest = true;
 
-  Examples.prototype.colors = function(request, callback) {
+  Examples.prototype.color = function(req, callback) {
     var _this = this;
     return new this.collection(this.config, function(err, collection) {
       _this.collection = collection;
@@ -1105,6 +1106,11 @@ responders.Examples = (function() {
         color: request.data.color
       }, callback);
     });
+  };
+
+  Examples.prototype.testing = function(req, callback) {
+    console.log(req.uri_params);
+    return callback(null, 'hi and stuff');
   };
 
   return Examples;
@@ -1126,15 +1132,21 @@ responders.Pages = (function() {
   };
 
   Pages.prototype.index = function(req, callback) {
-    return callback(null, {
-      view: 'index'
-    });
+    var data;
+    data = {
+      view: 'index',
+      layout: 'layouts/page'
+    };
+    return callback(null, data);
   };
 
   Pages.prototype.page = function(req, callback) {
-    return callback(null, {
-      view: req.params.view
-    });
+    var data;
+    data = {
+      view: 'docs/' + req.params.view,
+      layout: 'layouts/page'
+    };
+    return callback(null, data);
   };
 
   return Pages;
@@ -1161,10 +1173,18 @@ responders.Statements = (function() {
   Statements.prototype.annual = function(req, callback) {
     var _this = this;
     return new this.collection(this.config, function(err, collection) {
+      var queries;
       _this.collection = collection;
-      return _this.collection.db.query('SELECT YEAR(date) as year, MONTHNAME(date) as month, SUM(total) as total, SUM(reservation_fees) as res_fees, SUM(service_fees) as serv_fees FROM statements GROUP BY YEAR(date), MONTH(date)', function(err, res) {
-        if (err) callback(err);
-        return callback(null, res);
+      if (err) return callback(err);
+      queries = ["select YEAR(start_date) as year, MONTH(start_date) as month, sum(adults), sum(adults*1.46) as res_fees from reservations where start_date >= DATE_FORMAT(NOW() ,'%Y-01-01') and account_id in(select id from accounts where is_billable=1) and status=1 and (trip_id > '' or lodge_id > '') GROUP BY YEAR(start_date), MONTH(start_date)", "SELECT YEAR(date) as year, MONTHNAME(date) as month, SUM(total) as total, SUM(reservation_fees) as res_fees, SUM(service_fees) as serv_fees FROM statements GROUP BY YEAR(date), MONTH(date)"];
+      return async.map(queries, _this.collection.db.query, function(err, res) {
+        var data;
+        if (err) return callback(err);
+        data = {
+          projected: res[0],
+          billed: res[1]
+        };
+        return callback(null, data);
       });
     });
   };

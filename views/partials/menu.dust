@@ -1,5 +1,40 @@
+[![Swell Web Development](/img/swell.png)](/)
 
-### Flybook Admin
-*    <a href="#">home</a>
-*    <a href="#reports">reports</a>
+#### version {config.version}
+*    <a href="/page/docs" {@eq key="docs/docs" value=view}class="selected"{/eq}>Overview</a>
+*    <a href="/page/start" {@eq key="docs/start" value=view}class="selected"{/eq}>Starting</a>
+*    <a href="/page/server" {@eq key="docs/server" value=view}class="selected"{/eq}>Server</a>
+    *    <a href="#overview">Overview</a>
+    *    <a href="#pipeline">Pipeline</a>
+    *    <a href="#middleware">Middleware</a>
+    *    <a href="#routes">Routes</a>
+    *    <a href="#responders">Responders</a>
+    *    <a href="#collections">Collections</a>
+    *    <a href="#models">Models</a>
+    *    <a href="#rest">REST</a>
+    *    <a href="#data">Data</a>
+    *    <a href="#views">Views</a>
+*    <a href="/page/client" {@eq key="docs/client" value=view}class="selected"{/eq}>Client</a>
+    *    <a href="#overview">Overview</a>
+    *    <a href="#structure">Structure</a>
+    *    <a href="#namespacing">Namespacing</a>
+    *    <a href="#templating">Templating</a>
+    *    <a href="#templating">Dependencies</a>
+    *    <a href="#clientcore">Client Core</a>
+    *    <a href="#packaging">Packaging</a>
+*    <a href="/page/debug" {@eq key="docs/debug" value=view}class="selected"{/eq}>Debugging</a>
+*    <a href="/page/deploy" {@eq key="docs/deploy" value=view}class="selected"{/eq}>Deploying</a>
+
+
+#### CORE API
+*    <a href="/page/model" {@eq key="docs/model" value=view}class="selected"{/eq}>swell.Model</a>
+*    <a href="/page/collection" {@eq key="docs/collection" value=view}class="selected"{/eq}>swell.Collection</a>
+*    <a href="/page/responder" {@eq key="docs/responder" value=view}class="selected"{/eq}>swell.Responder</a>
+*    <a href="/page/mongo" {@eq key="docs/mongo" value=view}class="selected"{/eq}>swell.Mongo</a>
+*    <a href="/page/mysql" {@eq key="docs/mysql" value=view}class="selected"{/eq}>swell.Mysql</a>
+*    <a href="/page/router" {@eq key="docs/router" value=view}class="selected"{/eq}>swell.Router</a>
+*    <a href="/page/form" {@eq key="docs/form" value=view}class="selected"{/eq}>swell.Form</a>
+*    <a href="/page/list" {@eq key="docs/list" value=view}class="selected"{/eq}>swell.List</a>
+*    <a href="/page/helpers" {@eq key="docs/helpers" value=view}class="selected"{/eq}>swell.Helpers</a>
+
 

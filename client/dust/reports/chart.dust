@@ -1,4 +1,4 @@
 <div class="chart">
 <h2>{name}</h2>
-<canvas id="chart" width="600" height="500"></canvas>
+<canvas id="chart" width="1000" height="500"></canvas>
 </div>

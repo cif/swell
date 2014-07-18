@@ -8,7 +8,8 @@
 
 (function(){
   
- var app, service, config, socket;  
+ var app, service, config, socket
+ var controllers = {};
  var render = require('./render'); 
  
  // this is used in place of express' 
@@ -81,11 +82,9 @@
  var execute = function(req, res, responder, method, call_by_type){  // executes the matched function
    
    // ensure responder and method exist
-   if(service.responders[responder]){
+   if(controllers[responder]){
      
-     var control = new service.responders[responder](config);
-     
-     if(control[method] || (call_by_type && control[call_by_type])){
+     if(controllers[responder][method] || (call_by_type && controllers[responder][call_by_type])){
        
        // parse any incoming form data
        var form = new formidable.IncomingForm();
@@ -115,27 +114,30 @@
          }
          
          // default to type GET, PUT, POST, DELETE etc.
-         if(!control[method]){ 
+         if(!controllers[responder][method]){ 
            method = call_by_type.toLowerCase();  
          }
          
          // call before on the reponder
-         if(!control.before(req)){
-           render.out(null, {unauthorized: true}, null, res, control.after);
+         if(!controllers[responder].before(req)){
+           render.out(null, {unauthorized: true}, null, res);
+           controllers[responder].after();
          }
        
-         // adjust the arguments and call the responder
+         // send any uri pased arguments as data.uri_params
          uri_args = req.url.split('/');  
          uri_args.shift();
          uri_args.shift();
+         req.uri_params = uri_args;
          
          var method_args = [req, function(err, data, emit){
            var data = data || {};
-           render.out(err, data, emit, res, control.after); // this is the final callback to the renderer.
-         }].concat(uri_args);
+           render.out(err, data, emit, res);
+           controllers[responder].after(err, res); // call after render has completed
+         }];
          
          // call the controller method
-         control[method].apply(null, method_args);
+         controllers[responder][method].apply(null, method_args);
        
        });
        
@@ -159,6 +161,13 @@
  var update = function(swell){   // refreshes the service property
    
    service = swell;
+   
+   // instantiate all the responders in advance
+   // dont need to do this each request, obviously
+   for(obj in service.responders){
+     controllers[obj] = new service.responders[obj];
+   }
+   
      
  }; // end update()
  

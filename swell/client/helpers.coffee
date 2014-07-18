@@ -5,9 +5,9 @@
 
 # IMPORTANT: This filename is prefixed with an _ so that it gets compiled before any other views
 
-class Helpers extends swell.Helpers
+class Helpers
   
-  init: =>
+  constructor: ->
     
     # extend dust.helpers so methods here are available in dust templates
     _.extend(dust.helpers, @)
@@ -21,9 +21,14 @@ class Helpers extends swell.Helpers
         console.error 'Helpers.ajax error: ' + error.responseText
         @callback error.responseText
   
-  # define your custom helpers here      
-  # example_dust_helper: (chunk, ctx, bodies, params) =>
-    # do stuff ... 
-    # chunk.write 'my custom helper works!'
-  
+        
+  test_dust_helper: (chunk, ctx, bodies, params) =>
+    chunk.write 'my custom helper works!'
+    
+  # ajax shortcut 
+  ajax: (url, @callback, options, method='POST') =>
+    options = _.extend @response_callback, options
+    options.url = url
+    options.type = method
+    $.ajax options
   

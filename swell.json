@@ -24,45 +24,54 @@
       }
     ],
     "output": "public/js/app.js",
-    "extensions":[".coffee"]
+    "extensions": [
+      ".coffee"
+    ]
   },
   "templates": {
     "compiler": "dust",
     "folders": "client/dust",
     "output": "public/js/tmpl.js",
-    "extensions":[".dust"]
+    "extensions": [
+      ".dust"
+    ]
   },
   "style": {
     "compiler": "stylus",
     "folders": "client/style",
     "output": "public/styles.css",
-    "extensions":[".styl"]
+    "extensions": [
+      ".styl"
+    ]
   },
   "deps": {
-    "compiler" : "deps",
+    "compiler": "deps",
     "folders": "client/vendor",
     "output": "public/js/deps.js",
-    "extensions":[".js"]
+    "extensions": [
+      ".js"
+    ]
   },
   "production": "public/js/production.js",
   "server": {
     "routes": {
       "/": "Pages.index",
-      "/page/:view" : "Pages.page"
+      "/page/:view": "Pages.page"
     },
+    "enable_markdown": true,
     "resources": {
-      "mongo-example" : {
-        "engine" : "mongo",
-        "db":"swell",
-        "host" : "127.0.0.1",
-        "port":"27017"
+      "mongo-example": {
+        "engine": "mongo",
+        "db": "swell",
+        "host": "127.0.0.1",
+        "port": "27017"
       },
-      "mysql" : {
-        "engine" : "mysql",
-        "db" : "flybook",
-        "host" : "216.228.174.155",
-        "user" : "fb-test",
-        "password" : "3XAmPl3!"
+      "mysql": {
+        "engine": "mysql",
+        "db": "flybook",
+        "host": "216.228.174.155",
+        "user": "fb-test",
+        "password": "3XAmPl3!"
       }
     },
     "coffee": {
@@ -82,16 +91,18 @@
         }
       ],
       "output": "server/swell.js",
-      "extensions":[".coffee"],
-      "exports" : true
+      "extensions": [
+        ".coffee"
+      ],
+      "exports": true
     },
-    "views":"views",
-    "layout":"layouts/app",
+    "views": "views",
+    "layout": "layouts/app",
     "port": "3030",
-    "timeout" : 3000,
-    "cookie_hash" : "cookie-hash-you-should-change",
-    "cookie_secret" : "cookie-secret-you-should-change",
-    "socket_io" : {
+    "timeout": 3000,
+    "cookie_hash": "cookie-hash-you-should-change",
+    "cookie_secret": "cookie-secret-you-should-change",
+    "socket_io": {
       "log level": 1
     }
   }

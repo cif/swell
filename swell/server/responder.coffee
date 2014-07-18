@@ -10,59 +10,60 @@ class Responder
   fs = require 'fs'
   path = require 'path'
   
-  # REST exposure must be explicitly turned on. security and stuff.
+  # automatic REST exposure must be explicitly turned on 
+  # you know, security and stuff
   expose_rest: false
   
   constructor: (@config) ->
     @initialize.apply(@, arguments)  
     this
   
-  # this is the one you should override
+  # this is the one you should override if you need to do things
   initialize: (@config) ->
     this
   
-  # returning false within a before method 
-  # results in a 401 (Unauthorized) response  
-  before: (request) =>
+  # returning false from a before method 
+  # results in a 401 (Unauthorized) response
+  before: (req) =>
     true
   
   # useful for any cleanup required, return
-  # values to not alter the request
-  after: (request) =>
+  # values do not alter the request or response
+  after: (req) =>
     true
     
   # core implementations of REST crud
   # methods are mapped from request type
-  get: (request, callback) =>
+  get: (req, callback) =>
     return callback(null, unauthorized:true) if !@expose_rest
     return callback('[swell] A collection must specified to use REST features') if !@collection
     new @collection @config, (err, @collection) =>
       return callback(err) if err
-      if request.data.id
-        @collection.get request.data.id, callback
+      if req.data.id
+        @collection.get req.data.id, callback
       else  
         @collection.fetch callback
         
-  post: (request, callback) =>
+  post: (req, callback) =>
     return callback(null, unauthorized:true) if !@expose_rest
     return callback('[swell] A collection must specified to use REST features') if !@collection
     new @collection @config, (err, @collection) =>
       return callback(err) if err
-      @collection.add request.data, callback
+      @collection.add req.data, callback
     
-  put: (request, callback) =>
+  put: (req, callback) =>
     return callback(null, unauthorized:true) if !@expose_rest
     return callback('[swell] A collection must specified to use REST features') if !@collection
     new @collection @config, (err, @collection) =>
       return callback(err) if err
-      @collection.update request.data, callback
+      @collection.update req.data, callback
     
-  delete: (request, callback) =>
+  delete: (req, callback) =>
     return callback(null, unauthorized:true) if !@expose_rest
     return callback('[swell] A collection must specified to use REST features') if !@collection
     new @collection @config, (err, @collection) =>
       return callback(err) if err
-      @collection.remove request.data, callback
+      @collection.remove req.data, callback
   
   
   

@@ -1,4 +1,4 @@
-// last compiled: 2014-07-14 15:07:10
+// last compiled: 2014-07-17 20:07:16
 
 var swell = {};
 var models = {};
@@ -136,6 +136,41 @@ swell.Form = (function() {
   };
 
   return Form;
+
+})();
+swell.Helpers = (function() {
+
+  function Helpers() {
+    this.ajax = __bind(this.ajax, this);
+    this.test_dust_helper = __bind(this.test_dust_helper, this);
+    var _this = this;
+    _.extend(dust.helpers, this);
+    this.response_callback = {
+      success: function(data) {
+        console.info('Helpers.ajax returned: ', data);
+        return _this.callback(null, data);
+      },
+      error: function(error) {
+        console.error('Helpers.ajax error: ' + error.responseText);
+        return _this.callback(error.responseText);
+      }
+    };
+  }
+
+  Helpers.prototype.test_dust_helper = function(chunk, ctx, bodies, params) {
+    return chunk.write('my custom helper works!');
+  };
+
+  Helpers.prototype.ajax = function(url, callback, options, method) {
+    this.callback = callback;
+    if (method == null) method = 'POST';
+    options = _.extend(this.response_callback, options);
+    options.url = url;
+    options.type = method;
+    return $.ajax(options);
+  };
+
+  return Helpers;
 
 })();
 swell.List = (function() {
@@ -356,11 +391,11 @@ swell.Model = (function() {
     var _this = this;
     this.response_callback = {
       success: function(data) {
-        console.info('swell.Model sync returned: ', _this.attributes);
+        console.info('Model.sync returned: ', _this.attributes);
         return _this.callback(null, data);
       },
       error: function(error) {
-        console.error('swell.Model sync error: ' + error.responseText);
+        console.error('Model.sync error: ' + error.responseText);
         return _this.callback(error.responseText);
       }
     };
@@ -396,6 +431,7 @@ swell.Model = (function() {
     options = _.extend(this.response_callback, options);
     options.url = url;
     options.type = method;
+    options.data = JSON.stringify(this.attributes);
     return $.ajax(options);
   };
 
@@ -562,7 +598,7 @@ collections.Examples = (function() {
 
   Examples.prototype.url = '/examples/';
 
-  Examples.prototype.resource = 'mongo-example-bad';
+  Examples.prototype.resource = 'mysql';
 
   Examples.prototype.store = 'examples';
 
@@ -620,7 +656,8 @@ routers.Application = (function() {
   }
 
   Application.prototype.initialize = function() {
-    this.helpers = new views.Helpers;
+    window.helpers = this.helpers = new views.Helpers;
+    this.user = new models.User;
     this.reports = new routers.Reports(this);
     this.examples = new routers.Examples(this);
     Backbone.history.start();
@@ -711,34 +748,26 @@ routers.Reports = (function() {
 })();
 views.Helpers = (function() {
 
+  __extends(Helpers, swell.Helpers);
+
   function Helpers() {
-    this.ajax = __bind(this.ajax, this);
-    this.test_dust_helper = __bind(this.test_dust_helper, this);
+    this.init = __bind(this.init, this);
+    Helpers.__super__.constructor.apply(this, arguments);
+  }
+
+  Helpers.prototype.init = function() {
     var _this = this;
     _.extend(dust.helpers, this);
-    this.response_callback = {
+    return this.response_callback = {
       success: function(data) {
-        console.info('swell.Helpers ajax returned: ', _this.attributes);
+        console.info('Helpers.ajax returned: ', data);
         return _this.callback(null, data);
       },
       error: function(error) {
-        console.error('swell.Helpers ajax error: ' + error.responseText);
+        console.error('Helpers.ajax error: ' + error.responseText);
         return _this.callback(error.responseText);
       }
     };
-  }
-
-  Helpers.prototype.test_dust_helper = function(chunk, ctx, bodies, params) {
-    return chunk.write('my custom helper works!');
-  };
-
-  Helpers.prototype.ajax = function(url, callback, options, method) {
-    this.callback = callback;
-    if (method == null) method = 'POST';
-    options = _.extend(this.response_callback, options);
-    options.url = url;
-    options.type = method;
-    return $.ajax(options);
   };
 
   return Helpers;
@@ -796,7 +825,6 @@ views.reports.ReportsChart = (function() {
 
   ReportsChart.prototype.render = function(name) {
     var _this = this;
-    console.log('doing it?');
     return dust.render('reports.chart', {
       name: name
     }, function(err, html) {
@@ -809,16 +837,17 @@ views.reports.ReportsChart = (function() {
     var context;
     var _this = this;
     context = document.getElementById('chart').getContext("2d");
-    return this.router.app.helpers.ajax('/statements/annual/', function(err, data) {
-      var chart, colors, draw, index, month, months, set, year, years, _i, _j, _len, _len2;
+    return helpers.ajax('/statements/annual/', function(err, data) {
+      var chart, colors, draw, index, month, months, push, set, year, years, _i, _j, _k, _l, _len, _len2, _len3, _len4, _m, _ref, _ref2;
       draw = {
         labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
         datasets: []
       };
       years = {};
       colors = ['red', 'blue', 'green', 'orange'];
-      for (_i = 0, _len = data.length; _i < _len; _i++) {
-        month = data[_i];
+      _ref = data.billed;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        month = _ref[_i];
         month.color = colors[_i];
         if (!years[month.year]) years[month.year] = [];
         years[month.year].push(month);
@@ -829,7 +858,7 @@ views.reports.ReportsChart = (function() {
         set = {
           label: year + ' Res Fees',
           strokeColor: colors[index],
-          fillColor: 'transparent',
+          fillColor: colors[index],
           data: []
         };
         for (_j = 0, _len2 = months.length; _j < _len2; _j++) {
@@ -838,10 +867,37 @@ views.reports.ReportsChart = (function() {
         }
         draw.datasets.push(set);
         index++;
+      }
+      years = {};
+      colors = ['green', 'orange', 'purple', 'pink', 'black'];
+      _ref2 = data.projected;
+      for (_k = 0, _len3 = _ref2.length; _k < _len3; _k++) {
+        month = _ref2[_k];
+        month.color = colors[_i];
+        if (!years[month.year]) years[month.year] = [];
+        years[month.year].push(month);
+      }
+      index = 0;
+      for (year in years) {
+        months = years[year];
+        set = {
+          label: year + ' Projected',
+          strokeColor: colors[index],
+          fillColor: colors[index],
+          data: []
+        };
+        for (_m = 1; _m < 13; _m++) {
+          push = 0;
+          for (_l = 0, _len4 = months.length; _l < _len4; _l++) {
+            month = months[_l];
+            if ((month.month + 1) === _m) push = month.res_fees;
+          }
+          set.data.push(push);
+        }
+        draw.datasets.push(set);
         index++;
       }
-      console.log(draw);
-      return chart = new Chart(context).Line(draw, false);
+      return chart = new Chart(context).Bar(draw, false);
     });
   };
 

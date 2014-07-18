@@ -1,0 +1,47 @@
+# Starting Out
+
+### Get Node.JS and NPM
+The easiest way to get Node.js is from their [downloads page](http://nodejs.org/download/). 
+<br>You can also use [brew](http://brew.sh/) or another package manager to do job if that's how you roll.
+
+### Get Swell via NPM
+An easy one liner:
+
+    npm install -g swell
+
+
+### Create your app
+To create your first app, cd anywhere you want to put the app then run the swell command with the **-n or --new** flag. To run the app, use the **-s or --server** flag.
+
+    $ cd ~/Development/swell
+    $ swell -n staplr
+    $ cd staplr
+    $ swell --server -w
+
+Note the use of **-w (--watch)**. This tells Swell to watch for changes and recompile. You can accomplish the same thing simply running `swell -ws`. 
+
+Open [http://localhost:3030/](http://localhost:3030/) in your browser and if everything went well you'll see the [start page](/).
+
+### swell.json
+**swell.json** lives in the root of your project's directory. This file (similar to a gruntfile) allows you to specify directories for complication, which compiler classes to use, data sources for your application, as well as any global variables you want use of in your application. Config variables are available as `@config.my_variable` or `this.config.my_variable` in [responder](/page/server#responders) methods, and the response (dust context) data returned to your views. For example, you could use <code>&lcub;config.version&rcub;</code> in your views to render that value. 
+
+You can edit the file manually, or use the `-c` and `-d` command options to set configuration variables from the command line like so:
+
+    $ swell -c "name" "the application name"
+    $ swell -c "custom" "a custom value passed to all my views"
+
+### Swell CLI
+Swell has a few simple commands which assist with development (and production). You can view these commands in your terminal using `swell -h`.  You may **specify an alternative JSON config** file using `-f` which is very often useful in deployments.
+
+    -n, --new       create a new workspace with <name> in the current directory
+    -w, --watch     watch and recompile coffee, template, and style files when changed
+    -s, --server    spin up an express server on the port speficied in your configuration
+    -f, --file      configuration <file> to be used instead of default [swell.json]
+    -p, --package   package dependencies, templates and application files to a single production file
+    -c, --config    set a new or existing configuration variable in your json <key> <value>. (use quotes)
+    -d, --remove    remove a <key> from json configuration. (use quotes)
+    
+
+___________
+
+{>"partials/credit"/}

@@ -1,0 +1,15 @@
+# Debugging
+
+One of the unfortunate drawbacks of developing in [CoffeScript](http://coffeescript.org/), is that the exact line causing problems in your code will not be the line throwing an error in your terminal console or log file, nor the line of javascript being called up your browser console. 
+
+For this reason, you should **understand how coffeescript compiles into javascript** if you elect to develop using coffescript. Once you have a handle on this, debugging your app is actually fairly easy.
+
+### On the server
+
+By default your server side responders, models, and collection objects will be compiled into `server/swell.js`.  When trouble arises, you should get the error and the callstack which lead to the issue. As with any application, it is critically important to **test all your responder methods** througly using a automation via programs such as [PhantomJS](http://phantomjs.org/) or [Selinium](http://docs.seleniumhq.org/)
+
+### On the client
+
+By default all your client side javascript will compile into a nice and readable file `public/app.js`. It's **often worth having this file open** during testing and debugging so that you can identify the exact line of code where the problem occured. Modern browsers also afford you the option of examining the call stack leading up to any uncaught errors. 
+
+

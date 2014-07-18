@@ -1,7 +1,111 @@
 
+section[role=main] {
+  margin: 20px 2% 40px 200px;
+  max-width: 810px;
+}
+section[role=main] img {
+  margin: 20px 0;
+}
+section[role=main] .flow {
+  width: 120px;
+  float: left;
+  text-align: center;
+  margin: 10px 15px 15px 0;
+}
+section[role=main] .flow h5 {
+  display: block;
+  background: #00468c;
+  width: 100%;
+  height: 120px;
+  -webkit-border-radius: 60px;
+  -moz-border-radius: 60px;
+  border-radius: 60px;
+  color: #fff;
+  font-weight: bold;
+  line-height: 105px;
+  box-shadow: #74a9da -2px -4px 0;
+  -moz-box-shadow: #74a9da -2px -4px 0;
+  -webkit-box-shadow: #74a9da -2px -4px 0;
+}
+section[role=main] .flow p,
+section[role=main] .flow a {
+  padding: 3px;
+  font-size: 11px;
+  line-height: 15px;
+}
+section[role=main] pre,
+section[role=main] blockquote {
+  line-height: 20px;
+  padding: 15px;
+  font-size: 11px;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  border-radius: 5px;
+  background-color: #fff;
+}
+section[role=main] pre code,
+section[role=main] blockquote code {
+  padding: 0;
+  background: transparent;
+  border: none;
+}
+section[role=main] code {
+  padding: 1px 5px;
+  background: #eee;
+  border: 1px solid #ddd;
+}
+section[role=main] blockquote {
+  margin-right: 90px;
+  font-style: italic;
+}
+.credit {
+  font-size: 11px;
+  line-height: 20px;
+}
+.credit a {
+  font-size: 11px;
+}
+
 
 aside {
-  padding: 0 10px;
+  position: fixed;
+  top: 0;
+  padding: 25px 20px;
+  width: 160px;
+  background: #fff;
+  height: 100%;
+}
+aside h4 {
+  margin-top: 15px;
+  font-size: 10px;
+  font-weight: bold;
+}
+aside ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+aside ul li {
+  margin: 5px 0;
+}
+aside ul li ul {
+  padding-left: 10px;
+  display: none;
+}
+aside ul li ul li a {
+  font-size: 12px;
+}
+aside ul li a.selected {
+  font-weight: bold;
+}
+aside ul li a.selected + ul {
+  display: block;
+}
+aside ul li a.selected + ul li a {
+  color: #00468c;
+}
+aside ul li a.selected + ul li a:hover {
+  color: #d88f2a;
 }
 
 * {
@@ -11,15 +115,45 @@ aside {
 }
 body,
 html {
-  font-family: 'Avant Garde', Avantgarde, 'Century Gothic', CenturyGothic, 'AppleGothic', sans-serif;
+  font: 13px 'Avant Garde', Avantgarde, 'Century Gothic', CenturyGothic, 'AppleGothic', sans-serif;
   background-color: #fff;
+  background: -moz-linear-gradient(left, #e1eef8 0%, #fff 100%);
+  background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #e1eef8), color-stop(100%, #fff));
+  background: -webkit-linear-gradient(top, #e1eef8 0%, #fff 100%);
+  background: -o-linear-gradient(top, #e1eef8 0%, #fff 100%);
+  background: -ms-linear-gradient(top, #e1eef8 0%, #fff 100%);
+  background: linear-gradient(to bottom, #e1eef8 0%, #fff 100%);
+  background-repeat: no-repeat;
   color: #777;
   margin: 0;
   padding: 0;
 }
-body,
+body {
+  height: 100%;
+}
+iframe {
+  position: fixed;
+  top: 15px;
+  right: 5px;
+}
+iframe.watch {
+  right: 62px;
+}
 div {
   position: relative;
+}
+p {
+  margin: 3px 0 10px 0;
+  font-size: 13px;
+  line-height: 32px;
+  color: #555;
+}
+p a {
+  font-weight: bold;
+  font-size: 14px;
+}
+p strong {
+  font-size: 14px;
 }
 a {
   font-size: 13px;
@@ -40,21 +174,23 @@ h3,
 h4,
 h5 {
   font-weight: 100;
-  margin: 7px 0 0 0;
+  padding: 7px 0 0 0;
   clear: both;
 }
 h1 {
-  font-size: 32px;
+  font-size: 40px;
   margin: 7px 0 10px 0;
+  letter-spacing: -1px;
+  font-weight: bold;
 }
 h2 {
   font-size: 18px;
   text-transform: uppercase;
 }
 h3 {
-  margin: 20px 0 4px 0;
+  padding: 20px 0 4px 0;
   font-size: 16px;
-  font-weight: 100;
+  text-transform: uppercase;
 }
 hr {
   border: 0;

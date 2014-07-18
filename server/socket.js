@@ -28,7 +28,8 @@
   var emit = function(event, data){
     
     
-  }; //end emit()
+    
+  }; // end emit()
   
   exports.emit = emit;
   exports.setup = setup;

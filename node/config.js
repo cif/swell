@@ -43,8 +43,7 @@
  }; // end assign()
 
  var set = function(file, key, value, callback){
-   
-   if(!value){
+   if(typeof(value) === 'undefined'){
      console.log(colors.red + '[swell] Error the --config command expects two values ' + colors.reset + "\n");
      callback(new Error('Swell: A value must be passed to --config command line option'));
      return false;

@@ -1,0 +1,202 @@
+# Server
+
+### Overview
+
+The server is a collection of javascript objects each which handle different aspects of the request and response pipeline, keeping extension of each clean. In most cases, **extensions to core functionality are implemented in middleware.js**. For example, if you wanted to install [Passport](http://passportjs.org/) as your authentication service, then all you would have to do is install the module with npm, and add the appropriate routes to the middleware.js setup() method.
+
+### Pipeline
+The server objects handle the request / response flow in left to right order:
+<div class="flow">
+  <h5>server.js</h5>
+  <p><b>server/server.js</b> instantiates <a href="http://nodejs.org/api/http.html">HTTP</a>, <a href="https://www.npmjs.org/package/express">express</a> as well as the <a href="http://expressjs.com/4x/api.html#middleware">middleware</a>, and the other components. It also <b>watches for changes to swell.js</b> and reloads them for save n' go development.</p>
+</div>
+
+<div class="flow">
+  <h5>middleware.js</h5>
+  <p><b>server/middlware.js</b> sets up static asset routes, sessions and cookies as well as static JSON. It is first in line, so any <b>custom route handlers you specify</b> here will take precedence over router.js</p>
+</div>
+
+<div class="flow">
+  <h5>router.js</h5>
+  <p><b>server/router.js</b> instantiates the service (swell.js) responders and handles routes specified by the app configuration as well as <b>URI mapping to responder object.method()</b>.</p>
+</div>
+
+<div class="flow">
+  <h5>swell.js</h5>
+  <p><b>server/swell.js</b> consits of the swell core server objects as well as models, collections and responders. The <b>methods it contains are called by the router</b> which in turn passes the response callback to render.js</p>
+</div>
+
+<div class="flow">
+  <h5>render.js</h5>
+  <p><b>server/render.js</b> instantiates  the <a href="https://github.com/krakenjs/adaro">dust view engine</a>, pre-processing options, and sends the appropriate final headers and <b>HTML/JSON/XML output</b> to the client as specified by swell.js object methods.</p>
+</div>
+
+<div class="flow">
+  <h5>socket.js</h5>
+  <p><b>server/socket.js</b> handles emit object broadcasts returned to render.js out() method and sends the packets to appropriately subscribed clients.</p>
+</div>
+
+### Middleware
+
+Middleware is the first stop on the request pipeline. Any route matching functions implemented in `server/middelware.js` will take priority over the default application routes. This is handy if you want to make use of **regular expression** route matching, or require more control over response handling for certain routes. 
+
+Here's a simple example handling a request via regex matched route in middleware.js (taken from [the expressjs docs](http://expressjs.com/4x/api.html#middleware))
+
+    app.get(/^\/commits\/(\w+)(?:\.\.(\w+))?$/, function(req, res){
+        var from = req.params[0];
+        var to = req.params[1] || 'HEAD';
+        res.send('commit range ' + from + '..' + to);
+    });
+
+
+### Routes
+
+There are two ways in which requests are routed to a responder object method (located in server/swell.js): 
+
+**1. swell.json** allows you to directly map routes to your responder object methods using your configuration file and specify arguments passed to `req.params`. Example:
+
+
+    "/examples/edit/:id" : "Examples.edit"
+
+ 
+**2. URI mapping** will automatically map request URIs to the responder object.method of the same pattern. For example, a GET request to /widgets/ would call `Examples.get(req, callback)` and an request to /widgets/by_price/ would map to `Examples.by_price(req, callback)`.  Additional `/arg`'s in your URIs get passed as an array `req.uri_params`
+
+
+### Responders
+
+Responders are objects containing methods called by router.js on each request. Methods take two arguments: `(req, callback)`. `req`, is the express request object in addition to query string and multipart / form-data stored in `req.data`. The second argument is the callback: `callback(err, data, emit)` whose arguments are passed to `server/render.js` (and `server/socket.js` if emit argument is specified) for final output. Node's standard callback argument pattern `(err, result)` makes it possible to pass the callback argument to directly to the functions which fetch data or perform operations.
+
+*An excerpt from router "Examples" (in coffeescript):*
+
+    class Examples extends swell.Responder
+      
+      # require nodejs modules like this
+      async = require 'async'
+      
+      # specify a collection
+      collection: collections.Examples
+      
+      # exposes the core get, post, put, delete methods
+      expose_rest: true
+  
+      color: (req, callback) =>
+        new @collection @config, (err, @collection) =>
+          # note direct passing of callback and uri_params (inflected)
+          @collection.query color: req.uri_params[0], callback 
+          
+      shapes: (req, callback) =>
+        new @collection @config, (err, @collection) =>
+          @collection.query is_shape: true, callback   
+      
+      # this takes id because it is specified in routes    
+      edit: (req, id, callback) =>  
+        new @collection @config, (err, @collection) =>
+          @collection.get req.params.id, (err, example) =>
+            return callback(err) if err
+            result =
+              example: example
+              view: 'examples/edit'
+              emit: 
+                message: 'example ' + req.params.id + ' being opened for editing'
+                
+              
+      ...    
+
+In this example, a GET request to */examples/color/red* would return JSON representing list of examples matching color:'red'. Additional methods can be created and will map automatically via URI mapping. Responder classes, in addition to models and collections are compiled into **server/swell.js**. When watching, changes will be reflected in each request made to the server. 
+
+### Collections
+
+Collection objects are the primary objects your responders will interact with. swell.Collection (server) methods are similar to Backbone.js on the client, the core of them being `fetch`, `where`, `get`, `add`, `update`, and `remove`.  Additionaly, Collection objects have a few shortcut properties for faster list loading, simple sorting and more.
+
+*An simple collection "Examples" (in coffeescript):*
+
+    class Examples extends swell.Collection
+  
+      model: models.Example
+      url: '/examples/'
+      resource: 'mongo'
+      store: 'examples'
+      sort_by: 'sort_order'
+      list: ['_id','name']
+     
+
+It's common these days for applications to use many data sources. For that reason Collections **each subscribe to their own data source**. Keep in mind that *your implementations* of any swell.Collection will be  **shared by the client**, so be careful not to override the core client side methods and properties found in [Backbone.Collection](http://backbonejs.org/#Collection)
+
+
+### Models
+
+Models are objects which define field keys and data types to be persisted on the server. Both the client and server share a common core validate(*attrs*) method (taken from <a href="http://backbonejs.org/#Model-validate">BackboneJS</a>) which validates and sanitizes data within your app. As with collecitons, your implementations are **shared by the client**, so be careful not to override [Backbone.Model](http://backbonejs.org/#Model) core functionality.
+
+*A simple "Example" model (written in coffeescript):*
+
+    class Example extends swell.Model
+      
+      idAttribute: '_id'
+  
+      fields:
+        name:
+          type: 'string'
+          not_empty: true
+          not: 'bad string'
+          message: 'Name cannot be "bad string"'
+    
+        color:
+          type: 'string'
+          expr: /^#([0-9a-f]{3}|[0-9a-f]{6})$/
+          message: 'Colors must be hex values'
+    
+
+### REST
+
+swell.Responder defines `get`,`post`,`put`, and `delete` methods which may be called when the `expose_rest` property is set to true. For security reasons, it is set to false by default. This allows you to create responder objects with three lines of code that will handle CRUD operations as per [BackboneJS](http://backbonejs.org) specifications.
+
+
+### Data
+
+The configuration file **swell.json** (check out [starting out](/page/start) section if you missed it) is where data sources are defined. Two types of databases are supported by the core swell.Collection class currently: **MySQL** and **MongoDB**.  Because **swell.Collection classes are compiled on the client**, you **don't want to expose your connection strings**.  Instead, specify a key by name, using `engine` to tell Swell which engine to use.
+
+*An example of two different data sources defined in swell.json:*
+
+    ...
+    "resources": {
+      "mongo-example" : {
+        "engine" : "mongo",
+        "db":"swell",
+        "host" : "127.0.0.1",
+        "port":"27017"
+      },
+      "mysql" : {
+        "engine" : "mysql",
+        "db" : "examples",
+        "host" : "127.0.0.1",
+        "user" : "swell",
+        "password" : "3XAmPl3s"
+      }
+    },
+    ...
+
+These can now be specified as a `resource` property of any swell.Collection instance.
+
+### Views
+
+Unless you are creating a PhoneGap or single page application, you may run into cases where it makes sense to render markup instead of JSON. **SEO is often the determining factor** in making this decision. In order to render views, you can specify a `view` property in your response. The default layout is specified in **swell.json** however this can also be overriden by specifying a `layout` property. 
+
+*Here is an example responder method that renders markup (in coffeescript):*
+
+    document: (req, callback) =>
+      data =
+        view: 'docs/' + req.uri_params[0]
+        layout: 'layouts/docs'
+        title: 'My Example Document'
+        roles: ['admin','customer']
+      callback null, data  
+        
+[Dust](https://github.com/linkedin/dustjs/wiki/Dust-Tutorial) syntax may be used to render any dynamic properies of the response (including configuration variables passed via `config` property). Further, your views may also make use of [markdown](http://daringfireball.net/projects/markdown/) syntax. Files contained in your **layouts folder is exempt** from this preprocessing step as unwanted markup can be generated due to line breaks. If desired, you may turn this functionality off in **swell.json** like so:
+
+    $ swell -c "server.enable_markdown" "false" 
+        
+
+        
+
+_____________
+{>"partials/credit"/}

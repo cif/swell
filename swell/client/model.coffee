@@ -17,10 +17,10 @@ class Model extends Backbone.Model
   initialize: =>
     @response_callback =
       success: (data) =>
-        console.info 'swell.Model sync returned: ', @attributes
+        console.info 'Model.sync returned: ', @attributes
         @callback null, data
       error: (error) =>
-        console.error 'swell.Model sync error: ' + error.responseText
+        console.error 'Model.sync error: ' + error.responseText
         @callback error.responseText
     
     @init.apply(@, arguments)
@@ -44,10 +44,12 @@ class Model extends Backbone.Model
     options = _.extend @response_callback, options
     @destroy options
   
-  # allows models to be posted to custom url
+  # allows models to be posted to custom url 
+  # without re-setting the url property
   # default request method will be a POST request
   call: (url, @callback, options, method='POST') =>
     options = _.extend @response_callback, options
     options.url = url
     options.type = method
+    options.data = JSON.stringify(@attributes)
     $.ajax options

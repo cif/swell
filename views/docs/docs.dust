@@ -1,0 +1,18 @@
+# Overivew
+
+Swell **is not a framework**, but rather a collection of compilers and a thin core library of objects that **speed the development of javascript apps.** Because both the client and server use javascript, your application's models and collections can be maintained in single constructs that extend **swell.Model** and **swell.Collection**. Swell is designed so that connected clients' versions of those constructs **keep in sync realtime**.
+
+### Under the hood
+
+Swell compiles [Coffeescript](http://coffeescript.org/) objects into javascript that extend [Backbone.js](http://backbonejs.org) on the client and respond to requests made via [Express](http://expressjs.com/) / [NodeJS](http://nodejs.org) on the server. A built-in [Socket.io](http://socket.io) instance allows for easy communication beteween multiple connected clients.  By default, Swell utilizes [Dust](https://github.com/linkedin/dustjs/wiki/Dust-Tutorial) for templating (both client and server side) and [Stylus](http://learnboost.github.io/stylus/) as a CSS preprocessor. You can always utilize other technologies to compress and package your static assets.
+
+### Exposure
+
+Swell applications always expose the core [server](/page/server) modules giving you full control over the entire request and response pipeline. **If you prefered to write in javascript** you could remove compiler targets in your config, write your code anywhere and then require it in **middleware.js**.
+
+If you are developing exclusivey on the client, [brunch](http://brunch.io/) or [grunt](http://gruntjs.com/) are better choices. 
+
+Ready? [Let's get started](/page/start)
+_______________________________
+
+{>"partials/credit"/}

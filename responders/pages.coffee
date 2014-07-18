@@ -15,12 +15,19 @@ class Pages extends swell.Responder
   
   # default index page
   index: (req, callback) =>
-    callback null, view: 'index'
+    data = 
+      view: 'index'
+      layout: 'layouts/page'
+    callback null, data
   
   # very simple responder method that will render 
   # a dust view template by url: /page/:view > views/:view.dust
   # to remove this functionality, delete the route in swell.json or run 
   #    swell -d  "server.routes./page/:view"
   page: (req, callback) =>
-    callback null, view: req.params.view
+    data = 
+      view: 'docs/' + req.params.view
+      layout: 'layouts/page'
+    callback null, data
   
+    

@@ -11,8 +11,10 @@ class Application extends Backbone.Router
   initialize: -> 
     
     # initialize helpers and high level objects
-    @helpers = new views.Helpers
-    # @user = new models.User 
+    window.helpers = @helpers = new views.Helpers
+    @user = new models.User 
+    #@user.call '/users/authenticate', (err, res) =>
+    #  console.log res
     
     # initialize any app routers here
     @reports = new routers.Reports @

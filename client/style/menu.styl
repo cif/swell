@@ -1,4 +1,32 @@
 @import 'func'
 
 aside
- padding 0 10px    
+  position fixed
+  top 0
+  padding 25px 20px
+  width 160px
+  background #fff
+  height 100%
+  h4
+    margin-top 15px
+    font-size 10px
+    font-weight bold
+  ul
+    list-style none
+    margin 0
+    padding 0
+    li
+      margin 5px 0
+      ul 
+        padding-left 10px
+        display none
+        li a
+          font-size 12px
+      a.selected
+        font-weight bold
+      a.selected + ul
+        display block
+        li a
+          color #00468C
+        li a:hover
+          color #D88F2A

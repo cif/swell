@@ -5,16 +5,36 @@
   box-sizing border-box
   
 body, html
-  font-family 'Avant Garde', Avantgarde, 'Century Gothic', CenturyGothic, 'AppleGothic', sans-serif
+  font 13px 'Avant Garde', Avantgarde, 'Century Gothic', CenturyGothic, 'AppleGothic', sans-serif
   background-color #fff
+  gradient(#E1EEF8, #fff, left, top, left, 200px)
+  background-repeat no-repeat
   color #777
   margin 0
   padding 0
 
-body  
+body
+  height 100%
+  
+iframe
+  position fixed
+  top 15px
+  right 5px
+iframe.watch
+  right 62px
+  
 div
   position relative
-
+p
+  margin 3px 0 10px 0
+  font-size 13px
+  line-height 32px
+  color #555
+  a
+    font-weight bold
+    font-size 14px
+  strong
+    font-size 14px
 a
   font-size 13px
   color #00468C
@@ -26,24 +46,26 @@ a:hover
   
 h1,h2,h3,h4,h5
   font-weight 100
-  margin 7px 0 0 0
+  padding 7px 0 0 0
   clear both
 h1
-  font-size 32px
+  font-size 40px
   margin 7px 0 10px 0
+  letter-spacing -1px
+  font-weight bold
 h2
   font-size 18px
   text-transform uppercase
 h3
-  margin 20px 0 4px 0
+  padding 20px 0 4px 0
   font-size 16px
-  font-weight 100
-  
+  text-transform uppercase
 hr
   border 0
   height 1px
   background #ccc
   margin 25px 0
   clear both
-  
 
+
+  

@@ -1,2 +1,8 @@
-<div class="menu">{> "partials/menu"/}</div>
-<div class="main"></div>
+# Nice! You're up
+
+This HTML is rendered by `views/index.dust` wrapped by `layouts/page.dust`.  
+
+If you want your application to have an index page, modify those views and/or  **update the default route or Pages.index() method** before you get rolling.
+
+**New to swell?**
+<br>We suggest you read [the documentation](/page/docs). 

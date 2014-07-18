@@ -42,14 +42,13 @@
     // off to be compiled and rendered / mashed up
     var file = config.base + config.server.views + '/' + name + '.dust';
     var tmpl;
-    if(name === config.server.layout){   // dont markdown things in the main layout
+    if(name.indexOf('layout') > -1 || !config.server.enable_markdown){   // dont markdown things in main layouts
       tmpl = fs.readFileSync(file,'utf8');
     } else {
       tmpl = converter.makeHtml(fs.readFileSync(file,'utf8'));
     } 
     callback(null, tmpl);
     
-    //console.log(name, context, callback);
     
   }; // end preprocess()
   
@@ -65,8 +64,7 @@
       res.send(err.toString());
       console.log(err.toString());
       console.trace();
-      if(callback) callback.apply(null, data);
-    
+      
     
     //  if data.denied comes back
     //  send it to the browser with 403 status  
@@ -75,7 +73,6 @@
       res.set('Content-Type','text/plain');
       res.status(403);
       res.send('403 Unauthorized.');
-      if(callback) callback.apply(null, data);
       
     } else if(data.view){
       
@@ -92,7 +89,6 @@
           res.send(err.toString());
           console.log(err.toString());
           console.trace();
-          if(callback) callback.apply(null, data);
           
         } else {  
           
@@ -103,7 +99,6 @@
             res.header('Content-Type','text/html');  
           res.status(200);
           res.send(out);
-          if(callback) callback.apply(null, data);
           
         }
         
@@ -114,7 +109,6 @@
       res.header('Content-Type','application/json');
       res.status(200);
       res.send(data);
-      if(callback) callback.apply(null, data);
       
     }
     
