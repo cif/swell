@@ -24,6 +24,10 @@
     app = express();
     server = http.createServer(app); 
     
+    // start the socket server
+    socket = require(config.base + 'server/socket');
+    socket.setup(server, app, config);
+    
     // middleware sets up sessions, any other required plugins for rendering, auth etc.
     middle = require(config.base + 'server/middleware');
     middle.setup(express, app, socket, config);
@@ -31,10 +35,6 @@
     // initialize the router
     router = require(config.base + 'server/router');
     router.setup(app, socket, config);
-    
-    // start the socket server
-    socket = require(config.base + 'server/socket');
-    socket.setup(server, app, config);
     
     // require the server side of swell, 
     // the wrapper method is used for watching and catching syntax errors
@@ -69,7 +69,7 @@
       
     } catch (e) {
       
-      console.log('[swell-server] Caught error in server/swell.js');
+      console.log('[swell-server] Caught error in server/swell.js:');
       console.log(e);
       console.trace();
       

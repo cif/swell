@@ -1,0 +1,50 @@
+@import 'func'
+
+.loader
+  width 120px
+  margin 10px auto
+  text-align center
+  transform scale(0.8)
+  -webkit-transform scale(0.8)
+  
+  em
+    display inline-block
+    width 15px
+    height 15px
+    margin 4px
+    background rgba(0,0,0,0.5)
+    rounded 100%
+    -webkit-animation bouncedelay 0.85s infinite ease-in-out
+    animation bouncedelay 0.85s infinite ease-in-out
+    -webkit-animation-fill-mode both
+    animation-fill-mode both
+    
+  em.one
+    -webkit-animation-delay -0.50s
+    animation-delay -0.50s
+  em.two
+    -webkit-animation-delay -0.40s
+    animation-delay -0.30s
+  em.three
+    -webkit-animation-delay -0.20s
+    animation-delay -0.20s
+  em.four
+    -webkit-animation-delay -0.10s
+    animation-delay -0.10s    
+  
+
+@keyframes bouncedelay 
+  0%, 70%, 100%  
+    transform scale(0.6)
+    -webkit-transform scale(0.6)
+    opacity 0.3
+    margin-right 4px
+   40%  
+    transform scale(1)
+    -webkit-transform scale(1)
+    opacity 1
+    margin-right 8px
+  
+
+
+    

@@ -1,6 +1,6 @@
 
 class Accounts extends swell.Collection
   
-  resource: 'mysql'
+  resource: 'mysql-flybook'
   expose_rest: true
   

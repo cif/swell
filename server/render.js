@@ -53,7 +53,7 @@
   }; // end preprocess()
   
   
-  var out = function(err, data, emit, res, callback){
+  var out = function(err, data, res){
     
     //  if an error comes back
     //  send it to the browser with 500 status
@@ -65,7 +65,6 @@
       console.log(err.toString());
       console.trace();
       
-    
     //  if data.denied comes back
     //  send it to the browser with 403 status  
     } else if(data.denied){

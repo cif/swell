@@ -6,7 +6,7 @@
 class Model
   
   # default key is assumed to be called id.
-  key: 'id'
+  key: '_id'
   
   # holds model attributes for server side impl, 
   # these get recyled in mem. need to destroy in constructor!
@@ -17,34 +17,16 @@ class Model
     @__extend  @attributes || {}, @defaults
     this
     
-  # set and get methods as per backbone's way
-  get: (prop) =>
-    @attributes[prop]
-  
-  set: (prop, value) =>
-    if prop instanceof Object
-      for k, i of prop
-        @attributes[k] = i
-    else  
-      @attributes[prop] = value
-    @attributes
-  
-  
-  # mirrors default backbone client side validation schema, but more automated
-  validate: (attrs, allow_objects = true) =>
-    @clean()
-    for key,value of @attributes
-      valid = @validate_field(key, @fields[key])
-      
-  
-    return  
-  #  removes extraneous data attached on the model
-  clean: =>
-    for key,value of @attributes
+ 
+  # removes extraneous data attached on the model
+  # validates fields based on what
+  sanitize: (object) =>
+    for key,value of object
       if !@fields[key] and key != @idAttribute
-        delete @attributes[key]
-    
-    return
+        delete object[key]
+        
+    # TODO: the big list of field/type validation options   
+    return object
   
   
   # validates invidivdual field (lots o' options)

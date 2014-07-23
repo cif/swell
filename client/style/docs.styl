@@ -1,11 +1,22 @@
 @import 'func'
 
+body.examples, body.docs, html
+  gradient(#E1EEF8, #fff, left, top, left, 200px)
+  background-repeat no-repeat
+
 section[role=main]
   margin 20px 2% 40px 200px
   max-width 810px
   img
     margin 20px 0
-    
+  
+  p:first-child,
+  p:first-of-type
+    font-size 18px
+    line-height 38px
+    a
+    strong
+      font-size 18px
   .flow
     width 120px
     float left
@@ -23,8 +34,9 @@ section[role=main]
      box-shadow #74A9DA -2px -4px 0
     p, a
      padding 3px
-     font-size 11px
+     font-size 11px !important
      line-height 15px
+     
 
   pre
   blockquote
@@ -41,7 +53,7 @@ section[role=main]
     padding 1px 5px
     background #eee
     border 1px solid #ddd
-        
+      
   blockquote
     margin-right 90px
     font-style italic

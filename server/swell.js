@@ -1,4 +1,4 @@
-// last compiled: 2014-07-17 19:07:50
+// last compiled: 2014-07-23 12:07:35
 
 var swell = {};
 var models = {};
@@ -11,34 +11,22 @@ __extends = function(child, parent) { for (var key in parent) { if (__hasProp.ca
 
 swell.Collection = (function() {
 
-  Collection.prototype.key = 'id';
+  Collection.prototype.key = '_id';
 
   Collection.prototype.sort = 'sort_order';
 
-  function Collection(config, callback) {
-    this.comparator = __bind(this.comparator, this);
+  function Collection(config) {
     this.pare = __bind(this.pare, this);
     this.update = __bind(this.update, this);
     this.add = __bind(this.add, this);
     this.get = __bind(this.get, this);
     this.where = __bind(this.where, this);
-    this.fetch = __bind(this.fetch, this);
-    var _this = this;
+    this.fetch = __bind(this.fetch, this);    if (this.model) this.model = new this.model(this);
     if (this.data = config.server.resources[this.resource]) {
       if (this.data.engine === 'mongo') this.db = new swell.Mongo(this);
       if (this.data.engine === 'mysql') this.db = new swell.Mysql(this);
-      if (this.data.engine === 'mysql') {
-        this.db.use(function(err, res) {
-          if (err) callback(err);
-          return callback(null, _this);
-        });
-      } else if (this.db) {
-        callback(null, this);
-      } else {
-        callback('[swell] could not connect to data source "' + this.resource + '" :' + JSON.stringify(this.data));
-      }
     } else {
-      callback('[swell] your collection is attempting to locate an unspecified data resource "' + this.resource + '". Define it in your configuration.');
+      console.log('[swell-server] a collection is attempting to locate an unspecified data resource "' + this.resource + '".');
     }
   }
 
@@ -55,25 +43,32 @@ swell.Collection = (function() {
   };
 
   Collection.prototype.get = function(id, callback) {
+    callback(null, []);
     return this.db.get(this.key, id, callback);
   };
 
   Collection.prototype.add = function(data, callback) {
     var cleaned;
-    if (typeof this.model !== 'function') {
+    if (!this.model) {
       return callback('[swell] a model must be specified to use REST features');
     }
-    this.model = new this.model(data);
-    cleaned = this.model.validate(data);
-    console.log(typeof cleaned);
-    if (typeof cleaned !== 'undefined') {
-      return callback('[swell] validation error: ' + cleaned);
+    cleaned = this.model.sanitize(data);
+    if (!cleaned) {
+      return callback('[swell] data sanitization error: ' + this.model.invalid);
     }
-    return this.db.insert(this.model.attributes, callback);
+    return this.db.insert(cleaned, callback);
   };
 
   Collection.prototype.update = function(data, callback) {
-    return this.db.update(this.key, data, callback);
+    var cleaned;
+    if (!this.model) {
+      return callback('[swell] a model must be specified to use REST features');
+    }
+    cleaned = this.model.sanitize(data);
+    if (!cleaned) {
+      return callback('[swell] data sanitization error: ' + this.model.invalid);
+    }
+    return this.db.update(data[this.model.key], cleaned, callback);
   };
 
   Collection.prototype.remove = function(data, callback) {
@@ -92,71 +87,30 @@ swell.Collection = (function() {
     return res;
   };
 
-  Collection.prototype.comparator = function(model) {
-    if (this.sort_by) {
-      return model.get(this.sort_by);
-    } else {
-      return 0;
-    }
-  };
-
   return Collection;
 
 })();
 swell.Model = (function() {
 
-  Model.prototype.key = 'id';
+  Model.prototype.key = '_id';
 
   Model.prototype.attributes = {};
 
   function Model(attributes) {
     this.attributes = attributes;
     this.validate_field = __bind(this.validate_field, this);
-    this.clean = __bind(this.clean, this);
-    this.validate = __bind(this.validate, this);
-    this.set = __bind(this.set, this);
-    this.get = __bind(this.get, this);
+    this.sanitize = __bind(this.sanitize, this);
     this.__extend(this.attributes || {}, this.defaults);
     this;
   }
 
-  Model.prototype.get = function(prop) {
-    return this.attributes[prop];
-  };
-
-  Model.prototype.set = function(prop, value) {
-    var i, k;
-    if (prop instanceof Object) {
-      for (k in prop) {
-        i = prop[k];
-        this.attributes[k] = i;
-      }
-    } else {
-      this.attributes[prop] = value;
+  Model.prototype.sanitize = function(object) {
+    var key, value;
+    for (key in object) {
+      value = object[key];
+      if (!this.fields[key] && key !== this.idAttribute) delete object[key];
     }
-    return this.attributes;
-  };
-
-  Model.prototype.validate = function(attrs, allow_objects) {
-    var key, valid, value, _ref;
-    if (allow_objects == null) allow_objects = true;
-    this.clean();
-    _ref = this.attributes;
-    for (key in _ref) {
-      value = _ref[key];
-      valid = this.validate_field(key, this.fields[key]);
-    }
-  };
-
-  Model.prototype.clean = function() {
-    var key, value, _ref;
-    _ref = this.attributes;
-    for (key in _ref) {
-      value = _ref[key];
-      if (!this.fields[key] && key !== this.idAttribute) {
-        delete this.attributes[key];
-      }
-    }
+    return object;
   };
 
   Model.prototype.validate_field = function(attr, validator) {
@@ -635,9 +589,6 @@ swell.Mysql = (function() {
     this.close_connection = __bind(this.close_connection, this);
     this.uuid = __bind(this.uuid, this);
     this.s4 = __bind(this.s4, this);
-    this.describe = __bind(this.describe, this);
-    this.objectify = __bind(this.objectify, this);
-    this.stringify = __bind(this.stringify, this);
     this.query = __bind(this.query, this);
     this.bump = __bind(this.bump, this);
     this.destroy = __bind(this.destroy, this);
@@ -645,81 +596,83 @@ swell.Mysql = (function() {
     this.insert = __bind(this.insert, this);
     this.get = __bind(this.get, this);
     this.find = __bind(this.find, this);
-    this.db = mysql.createConnection({
+    this.pool = mysql.createPool({
       host: this.collection.data.host,
       user: this.collection.data.user,
       password: this.collection.data.password
     });
-    this.db.connect();
     this;
   }
 
-  Mysql.prototype.use = function(callback) {
-    return this.db.query('USE ' + this.collection.data.db, callback);
-  };
-
   Mysql.prototype.find = function(options, callback) {
-    var conditions, direction, field, fields, operand, query, val, value, _ref;
     var _this = this;
-    fields = options.fields ? options.fields : '*';
-    query = 'SELECT ' + fields + ' FROM ' + this.collection.store;
-    if (options.join) {
-      direction = options.join.direction || 'LEFT';
-      query += ' ' + direction + ' JOIN (' + options.join.table + ') ';
-      query += 'ON ' + options.join.on;
-    }
-    if (options.where) {
-      if (typeof options.where === 'string') {
-        query += ' WHERE ' + options.where;
-      } else {
-        conditions = [];
-        _ref = options.where;
-        for (field in _ref) {
-          value = _ref[field];
-          if (value instanceof Object) {
-            for (operand in value) {
-              val = value[operand];
-              conditions.push(field + ' ' + operand + ' ' + this.db.escape(val));
-            }
+    return this.pool.getConnection(function(err, conn) {
+      if (err) return callback(err);
+      return conn.query('USE ' + _this.collection.data.db, function(err, rows) {
+        var conditions, direction, field, fields, operand, query, val, value, _ref;
+        if (err) return callback(err);
+        fields = options.fields ? options.fields : '*';
+        query = 'SELECT ' + fields + ' FROM ' + _this.collection.store;
+        if (options.join) {
+          direction = options.join.direction || 'LEFT';
+          query += ' ' + direction + ' JOIN (' + options.join.table + ') ';
+          query += 'ON ' + options.join.on;
+        }
+        if (options.where) {
+          if (typeof options.where === 'string') {
+            query += ' WHERE ' + options.where;
           } else {
-            conditions.push(field + '=' + this.db.escape(value));
-          }
-        }
-        query += ' WHERE ' + conditions.join(' AND ');
-      }
-    }
-    if (options.order) {
-      query += ' ORDER BY ' + options.order;
-    } else if (this.collection.sort_by) {
-      query += ' ORDER BY ' + this.collection.sort_by;
-    }
-    if (options.limit) query += ' LIMIT ' + options.limit;
-    return this.db.query(query, function(err, rows, fields) {
-      var prop, results, row, value, _i, _len;
-      if (err && callback) {
-        return callback(err);
-      } else {
-        results = [];
-        if (rows.length === 0) {
-          return callback(null, false);
-        } else {
-          for (_i = 0, _len = rows.length; _i < _len; _i++) {
-            row = rows[_i];
-            for (prop in row) {
-              value = row[prop];
-              row[prop] = value;
+            conditions = [];
+            _ref = options.where;
+            for (field in _ref) {
+              value = _ref[field];
+              if (value instanceof Object) {
+                for (operand in value) {
+                  val = value[operand];
+                  conditions.push(field + ' ' + operand + ' ' + conn.escape(val));
+                }
+              } else {
+                conditions.push(field + '=' + conn.escape(value));
+              }
             }
-            results.push(row);
+            query += ' WHERE ' + conditions.join(' AND ');
           }
-          if (callback) return callback(null, results);
         }
-      }
+        if (options.order) {
+          query += ' ORDER BY ' + options.order;
+        } else if (_this.collection.sort_by) {
+          query += ' ORDER BY ' + _this.collection.sort_by;
+        }
+        if (options.limit) query += ' LIMIT ' + options.limit;
+        return conn.query(query, function(err, rows, fields) {
+          var prop, results, row, value, _i, _len;
+          conn.release();
+          if (err && callback) {
+            return callback(err);
+          } else {
+            results = [];
+            if (rows.length === 0) {
+              return callback(null, false);
+            } else {
+              for (_i = 0, _len = rows.length; _i < _len; _i++) {
+                row = rows[_i];
+                for (prop in row) {
+                  value = row[prop];
+                  row[prop] = value;
+                }
+                results.push(row);
+              }
+              if (callback) return callback(null, results);
+            }
+          }
+        });
+      });
     });
   };
 
   Mysql.prototype.get = function(key, id, callback) {
     var _this = this;
-    return this.db.query('SELECT * FROM ' + this.collection.store + ' WHERE ' + key + ' = ' + this.db.escape(id), function(err, rows, fields) {
+    return conn.query('SELECT * FROM ' + this.collection.store + ' WHERE ' + key + ' = ' + conn.escape(id), function(err, rows, fields) {
       var prop, res, value;
       if (err) callback(err);
       if (rows && rows.length > 0) {
@@ -736,82 +689,105 @@ swell.Mysql = (function() {
   };
 
   Mysql.prototype.insert = function(object, callback) {
-    return this.db.query('INSERT INTO ' + this.collection.store + ' SET ?', object, function(err, res) {
-      if (err) {
-        return callback(err);
-      } else if (callback) {
-        res.id = object.id;
-        return callback(null, res);
-      }
+    var _this = this;
+    return this.pool.getConnection(function(err, conn) {
+      if (err) return callback(err);
+      return conn.query('USE ' + _this.collection.data.db, function(err, rows) {
+        var query;
+        if (err) return callback(err);
+        object[_this.collection.model.key] = _this.uuid();
+        return query = conn.query('INSERT INTO ' + _this.collection.store + ' SET ?', object, function(err, res) {
+          if (err) {
+            console.log('[swell-mysql] query caused error:', query.sql);
+            return callback(err);
+          } else if (callback) {
+            return callback(null, object);
+          }
+        });
+      });
     });
   };
 
-  Mysql.prototype.update = function(key, object, callback) {
-    return this.db.query('UPDATE ' + this.collection.store + ' SET ? WHERE ' + key + ' = ' + this.db.escape(id), object, callback);
+  Mysql.prototype.update = function(id, object, callback) {
+    var _this = this;
+    return this.pool.getConnection(function(err, conn) {
+      if (err) return callback(err);
+      return conn.query('USE ' + _this.collection.data.db, function(err, rows) {
+        var query;
+        if (err) return callback(err);
+        return query = conn.query('UPDATE ' + _this.collection.store + ' SET ? WHERE ' + _this.collection.model.key + ' = ' + conn.escape(id), object, function(err, res) {
+          conn.release();
+          if (err) {
+            console.log('[swell-mysql] query caused error:', query.sql);
+            return callback(err);
+          }
+          if (callback) return callback(err, res);
+        });
+      });
+    });
   };
 
-  Mysql.prototype.destroy = function(key, id, callback) {
-    return this.db.query('DELETE FROM ' + this.collection.store + ' WHERE ' + key + ' = ' + this.db.escape(id), callback);
+  Mysql.prototype.destroy = function(id, callback) {
+    var _this = this;
+    return this.pool.getConnection(function(err, conn) {
+      if (err) return callback(err);
+      return conn.query('USE ' + _this.collection.data.db, function(err, rows) {
+        if (err) return callback(err);
+        return conn.query('DELETE FROM ' + _this.collection.store + ' WHERE ' + _this.collection.model.key + ' = ' + conn.escape(id), function(err, res) {
+          conn.release();
+          if (err) {
+            console.log('[swell-mysql] query caused error:', query.sql);
+            return callback(err);
+          }
+        });
+      });
+    });
   };
 
-  Mysql.prototype.bump = function(key, field, value, id, callback) {
-    return this.db.query('UPDATE ' + this.collection.store + ' SET ' + field + '=' + field + '+' + value + ' WHERE ' + key + ' = ' + this.db.escape(id), callback);
+  Mysql.prototype.bump = function(field, value, id, callback) {
+    var _this = this;
+    return this.pool.getConnection(function(err, conn) {
+      if (err) return callback(err);
+      return conn.query('USE ' + _this.collection.data.db, function(err, rows) {
+        if (err) return callback(err);
+        return conn.query('UPDATE ' + _this.collection.store + ' SET ' + field + '=' + field + '+' + value + ' WHERE ' + _this.collection.model.key + ' = ' + conn.escape(id), function(err, res) {
+          conn.release();
+          if (err) {
+            console.log('[swell-mysql] query caused error:', query.sql);
+            return callback(err);
+          }
+        });
+      });
+    });
   };
 
   Mysql.prototype.query = function(query, callback) {
-    var results;
-    results = [];
-    return this.db.query(query, function(err, rows, fields) {
-      var row, _i, _len;
-      if (err) {
-        return callback(err);
-      } else {
-        if (rows.length === 0) {
-          return callback(false);
-        } else {
-          for (_i = 0, _len = rows.length; _i < _len; _i++) {
-            row = rows[_i];
-            results.push(row);
+    var _this = this;
+    return this.pool.getConnection(function(err, conn) {
+      if (err) return callback(err);
+      return conn.query('USE ' + _this.collection.data.db, function(err, rows) {
+        var results;
+        if (err) return callback(err);
+        results = [];
+        return conn.query(query, function(err, rows, fields) {
+          var row, _i, _len;
+          conn.release();
+          if (err) {
+            console.log('[swell-mysql] query caused error:', query.sql);
+            return callback(err);
+          } else {
+            if (rows.length === 0) {
+              return callback(false);
+            } else {
+              for (_i = 0, _len = rows.length; _i < _len; _i++) {
+                row = rows[_i];
+                results.push(row);
+              }
+              if (callback) return callback(null, results);
+            }
           }
-          if (callback) return callback(null, results);
-        }
-      }
-    });
-  };
-
-  Mysql.prototype.stringify = function(object) {
-    var prop, value;
-    for (prop in object) {
-      value = object[prop];
-      if (typeof value !== 'string') object[prop] = JSON.stringify(value);
-    }
-    return object;
-  };
-
-  Mysql.prototype.objectify = function(string_or_object) {
-    if (typeof string_or_object !== 'string') return string_or_object;
-    if (/^[\],:{}\s]*$/.test(string_or_object.replace(/\\["\\\/bfnrtu]/g, '@').replace(/"[^"\\\n\r]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g, ']').replace(/(?:^|:|,)(?:\s*\[)+/g, ''))) {
-      string_or_object = JSON.parse(string_or_object);
-    }
-    return string_or_object;
-  };
-
-  Mysql.prototype.describe = function(callback) {
-    return this.db.query('DESC ' + this.collection.store, function(err, rows, fields) {
-      var row, valid, _i, _len;
-      if (err) {
-        return callback(err);
-      } else {
-        valid = [];
-        for (_i = 0, _len = rows.length; _i < _len; _i++) {
-          row = rows[_i];
-          valid.push({
-            name: row.Field,
-            type: row.Type
-          });
-        }
-        if (callback) return callback(null, valid);
-      }
+        });
+      });
     });
   };
 
@@ -824,7 +800,7 @@ swell.Mysql = (function() {
   };
 
   Mysql.prototype.close_connection = function() {
-    return this.db.end();
+    return conn.end();
   };
 
   return Mysql;
@@ -841,6 +817,7 @@ swell.Responder = (function() {
 
   function Responder(config) {
     this.config = config;
+    this.sort = __bind(this.sort, this);
     this["delete"] = __bind(this["delete"], this);
     this.put = __bind(this.put, this);
     this.post = __bind(this.post, this);
@@ -848,6 +825,9 @@ swell.Responder = (function() {
     this.after = __bind(this.after, this);
     this.before = __bind(this.before, this);
     this.initialize.apply(this, arguments);
+    if (typeof this.collection === 'function') {
+      this.collection = new this.collection(this.config);
+    }
     this;
   }
 
@@ -865,7 +845,6 @@ swell.Responder = (function() {
   };
 
   Responder.prototype.get = function(req, callback) {
-    var _this = this;
     if (!this.expose_rest) {
       return callback(null, {
         unauthorized: true
@@ -874,15 +853,11 @@ swell.Responder = (function() {
     if (!this.collection) {
       return callback('[swell] A collection must specified to use REST features');
     }
-    return new this.collection(this.config, function(err, collection) {
-      _this.collection = collection;
-      if (err) return callback(err);
-      if (req.data.id) {
-        return _this.collection.get(req.data.id, callback);
-      } else {
-        return _this.collection.fetch(callback);
-      }
-    });
+    if (req.data.id) {
+      return this.collection.get(req.data.id, callback);
+    } else {
+      return this.collection.fetch(callback);
+    }
   };
 
   Responder.prototype.post = function(req, callback) {
@@ -895,15 +870,22 @@ swell.Responder = (function() {
     if (!this.collection) {
       return callback('[swell] A collection must specified to use REST features');
     }
-    return new this.collection(this.config, function(err, collection) {
-      _this.collection = collection;
+    return this.collection.add(req.data, function(err, res) {
+      var data;
       if (err) return callback(err);
-      return _this.collection.add(req.data, callback);
+      data = {
+        type: 'sort',
+        res: [res],
+        emit: {
+          event: _this.collection.store,
+          space: _this.config.server.socket_io.namespace
+        }
+      };
+      return callback(null, data);
     });
   };
 
   Responder.prototype.put = function(req, callback) {
-    var _this = this;
     if (!this.expose_rest) {
       return callback(null, {
         unauthorized: true
@@ -912,15 +894,10 @@ swell.Responder = (function() {
     if (!this.collection) {
       return callback('[swell] A collection must specified to use REST features');
     }
-    return new this.collection(this.config, function(err, collection) {
-      _this.collection = collection;
-      if (err) return callback(err);
-      return _this.collection.update(req.data, callback);
-    });
+    return this.collection.update(req.data, callback);
   };
 
   Responder.prototype["delete"] = function(req, callback) {
-    var _this = this;
     if (!this.expose_rest) {
       return callback(null, {
         unauthorized: true
@@ -929,11 +906,34 @@ swell.Responder = (function() {
     if (!this.collection) {
       return callback('[swell] A collection must specified to use REST features');
     }
-    return new this.collection(this.config, function(err, collection) {
-      _this.collection = collection;
-      if (err) return callback(err);
-      return _this.collection.remove(req.data, callback);
-    });
+    return this.collection.remove(req.data, callback);
+  };
+
+  Responder.prototype.sort = function(req, callback) {
+    var data, key, obj, results, sort, update, _ref;
+    if (!this.collection.model || !this.collection.model.key) {
+      return callback('[swell] sort was called on a responder that does not have a collection, store, or model or the model is missing a key: attribute');
+    }
+    results = [];
+    _ref = req.data.sorted;
+    for (key in _ref) {
+      obj = _ref[key];
+      update = {};
+      update[this.collection.model.key] = key;
+      sort = this.collection.sort_by ? this.collection.sort_by : 'sort_order';
+      update[sort] = obj;
+      results.push(update);
+      this.collection.update(update, false);
+    }
+    data = {
+      type: 'sort',
+      res: results,
+      emit: {
+        event: this.collection.store,
+        space: this.config.server.socket_io.namespace
+      }
+    };
+    return callback(null, data);
   };
 
   return Responder;
@@ -971,27 +971,39 @@ models.Example = (function() {
   Example.prototype.fields = {
     name: {
       type: 'string',
+      label: 'Name',
       not_empty: true,
       not: 'bad',
       message: 'Custom description validation message'
     },
     color: {
       type: 'string',
+      label: 'Color',
       maxlength: 6
+    },
+    length: {
+      type: 'number',
+      label: 'Length (in.)',
+      round: 2
     },
     sort_order: {
       type: 'number',
       expr: /^#([0-9a-f]{3}|[0-9a-f]{6})$/,
       length: 2
     },
-    start_date: {
+    datetime: {
+      label: 'Last Seen',
       type: 'datetime',
-      future: false
+      past: false,
+      format: 'MMM Do YYYY h:ma'
+    },
+    email: {
+      type: 'email'
     }
   };
 
   Example.prototype.defaults = {
-    name: 'New Example',
+    name: 'This is fucking retarded',
     color: 'cc0000'
   };
 
@@ -1006,8 +1018,6 @@ models.User = (function() {
     User.__super__.constructor.apply(this, arguments);
   }
 
-  User.prototype.key = 'id';
-
   return User;
 
 })();
@@ -1019,7 +1029,7 @@ collections.Accounts = (function() {
     Accounts.__super__.constructor.apply(this, arguments);
   }
 
-  Accounts.prototype.resource = 'mysql';
+  Accounts.prototype.resource = 'mysql-flybook';
 
   Accounts.prototype.expose_rest = true;
 
@@ -1038,13 +1048,13 @@ collections.Examples = (function() {
 
   Examples.prototype.url = '/examples/';
 
-  Examples.prototype.resource = 'mysql';
+  Examples.prototype.resource = 'mysql-swell';
 
   Examples.prototype.store = 'examples';
 
   Examples.prototype.sort_by = 'sort_order';
 
-  Examples.prototype.list = ['_id', 'name', 'color'];
+  Examples.prototype.list = ['_id', 'name', 'color', 'length', 'datetime'];
 
   return Examples;
 
@@ -1058,7 +1068,7 @@ collections.Statements = (function() {
     Statements.__super__.constructor.apply(this, arguments);
   }
 
-  Statements.prototype.resource = 'mysql';
+  Statements.prototype.resource = 'mysql-flybook';
 
   Statements.prototype.store = 'statements';
 
@@ -1075,7 +1085,7 @@ collections.Users = (function() {
     Users.__super__.constructor.apply(this, arguments);
   }
 
-  Users.prototype.resource = 'mysql';
+  Users.prototype.resource = 'mysql-flybook';
 
   Users.prototype.store = 'users';
 
@@ -1089,8 +1099,7 @@ responders.Examples = (function() {
   __extends(Examples, swell.Responder);
 
   function Examples() {
-    this.testing = __bind(this.testing, this);
-    this.color = __bind(this.color, this);
+    this.app = __bind(this.app, this);
     Examples.__super__.constructor.apply(this, arguments);
   }
 
@@ -1098,19 +1107,11 @@ responders.Examples = (function() {
 
   Examples.prototype.expose_rest = true;
 
-  Examples.prototype.color = function(req, callback) {
-    var _this = this;
-    return new this.collection(this.config, function(err, collection) {
-      _this.collection = collection;
-      return _this.collection.where({
-        color: request.data.color
-      }, callback);
+  Examples.prototype.app = function(req, callback) {
+    return callback(null, {
+      view: 'index',
+      layout: 'layouts/app'
     });
-  };
-
-  Examples.prototype.testing = function(req, callback) {
-    console.log(req.uri_params);
-    return callback(null, 'hi and stuff');
   };
 
   return Examples;
@@ -1143,7 +1144,7 @@ responders.Pages = (function() {
   Pages.prototype.page = function(req, callback) {
     var data;
     data = {
-      view: 'docs/' + req.params.view,
+      view: 'docs/' + req.params.view.replace(/\./g, '/'),
       layout: 'layouts/page'
     };
     return callback(null, data);

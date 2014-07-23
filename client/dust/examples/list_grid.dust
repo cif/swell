@@ -1,0 +1,16 @@
+<table class="grid">
+  <tr>
+    <th></th> <!-- selection placeholder -->
+    {#columns}
+      <th class="{@prop key=. obj=fields field="type"/}">{@prop key=. obj=fields field="label"/}</th>
+    {/columns}
+  </tr>
+  {#examples}
+    <tr>
+      <td>
+      {#columns}
+        <td class="{type}">{attributes[.]}</td>
+      {/columns}
+    </tr>
+  {/examples} 
+</table>   

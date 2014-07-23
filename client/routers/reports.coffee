@@ -6,13 +6,15 @@ class Reports extends swell.Router
     'reports' : 'reports'
     'reports/:which' : 'reports'
     
-  collection: new collections.Examples
   
   init: =>
     @view = new views.reports.ReportsChart @
     
   reports: (which='reservation_fees') =>
-    @view.render(which)
+    console.log 'bind?'
+    # @view.render(which)
     
-    
+  
+  bind: =>
+    console.log 'reports binding!'  
    

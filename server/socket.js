@@ -10,10 +10,12 @@
   
   var path = require('path');
   var io = require('socket.io');
-  var server, app, config; 
+  var server, app, config, socket; 
   var render = require('./render');
+  var spaces = {};
+  
   var setup = function(_server, _app, _config){
- 
+    
     // scope varaiables
     server = _server;
     app = _app;
@@ -24,10 +26,14 @@
     
   };
   
-  // an interface that allows events to emit from the router and responder
-  var emit = function(event, data){
+  // simple emits from the router and responder
+  var emit = function(req, space, event, data){
     
+    // set the socket id so we can ignore on the client if we have to
+    console.log(data);
     
+    // emit the event
+    socket.of(space).emit(event, data);
     
   }; // end emit()
   

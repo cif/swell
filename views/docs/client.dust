@@ -1,11 +1,7 @@
 # Client
 
 
-### Overview
-
-True to the promise of flexibility, client side development in Swell is not limited to many constructs or constraints. The only convention is a reliance on [BackboneJS](http://backbonejs.org) which, like Swell is not a framework but rather: 
-
->  "...gives structure to web applications by providing models with key-value binding and custom events, collections with a rich API of enumerable functions, views with declarative event handling, and connects it all to your existing API over a RESTful JSON interface."
+True to the promise of flexibility, client side development in Swell is not limited by constraints. The only convention is a reliance on [BackboneJS](http://backbonejs.org) which, like Swell is not a framework but rather *"... gives structure to web applications by providing models with key-value binding and custom events, collections with a rich API of enumerable functions, views with declarative event handling...*" <br>Of course, there are many built-in shortcuts for you to take advantage of.
 
 ### Structure
 How you structure your application on the client is entirely up to you and can easily be changed with modifications to your configuration file. Worth noting however, is that `/models` and `/collections` are **simultaneously compiled to facilitate services on the server**, so you'll want to be sure those line up regardless of where you put them.
@@ -22,7 +18,35 @@ Subsequent folder structures are recursively namespaced. For example, if you wer
 
 This object could be instantiated with this code `@example_editor = new views.examples.Editor`. The same is true of any folder you target and namespace using your configuration file.   
 
-**Files are complied in alphabetical order.** You may have to use _ (like `views/_helpers.coffee) in some cases in order to ensure that classes you extend are defined first at compile time. You can use the configuration .json file to "break out" folders if need be.
+**Files are complied in alphabetical order.**  To accommodate potential issues with this, you can use _ (like `views/_helpers.coffee) to ensure that object which you extend are defined first at runtime. A cleaner way, is to use the "break out" folders if need be. **The compiler configuration takes an array of namespace and folder pairs**.
+
+*Here's an excerpt from the default [swell.json](https://github.com/cif/swell/blob/master/swell.json):*
+      
+      ...
+      "client": {
+        "compiler": "coffee",
+        "folders": [
+          {
+            "swell": "swell/client"
+          },
+          {
+            "models": "models"
+          },
+          {
+            "collections": "collections"
+          },
+          {
+            "routers": "client/routers"
+          },
+          {
+            "views": "client/views"
+          }
+        ],
+        "output": "public/js/app.js",
+        "extensions": [
+          ".coffee"
+        ]
+      }, ...
 
 ### Templating
 
@@ -36,31 +60,39 @@ Templates are watched and compiled into a single development target `public/tmpl
           @$el.html res
       ...
 
+Swell has a one liner shortcut for rendering via [swell.Helpers](/page/api.client.helpers) that supports markdown with an optional fourth argument set to `true`. Because dust's rendering function is asychronous, a final callback argument is specified in case you have to wait for the markup to be present
+
+    helpers.render @el, 'reports.help', context, true
+
+##### **Deveopler Note:** As of Swell version 0.2, the dust compiler on osX 10.8 struggles with newlines in tabbed in (code blocks etc.) markdown for the initial startup/compile . Once a file has been saved, the issue seems to resolve itself.
+
 ### Dependencies
 
-Swell includes a dependency manager that will concatenate vendor files to a single development target `deps.js` (by default). Changes to the `client/vendor` directory are watched and the development file is updated. Swell comes with the following libraries pre-installed, however this can be augmented for additional client slide functionality.
+Swell includes a dependency manager that will concatenate vendor files to a single development target `deps.js` (by default). Changes to the `client/vendor` directory are watched and the development file is updated. **Swell comes with the following libraries pre-installed**:  
 
-* [Underscore](http://underscorejs.org/)
-* [Backbone](http://backbonejs.org)
-* [jQuery](http://jquery) (can be replaced with Zepto in some cases) 
-* [Dust](https://github.com/linkedin/dustjs/wiki/Dust-Tutorial) (handlebars and others are easy to implement)
-* [Moment](http://momentjs.com/) (an indispensible datetime wrapper)
-* [Storage](http://www.jstorage.info/) (a local storage wrapper for when cookie values get too long)
+* [Underscore](http://underscorejs.org/) **~13k**
+* [Backbone](http://backbonejs.org) **~20k**
+* [jQuery](http://jquery.com) **~96k**
+* [jQueryUI](http://jqueryui.com)  **~90k** (used to support drag and drop)
+* [Dust](https://github.com/linkedin/dustjs/wiki/Dust-Tutorial) **~11k** (handlebars and others are easy to implement)
+* [Moment](http://momentjs.com/) **~28k** (an indispensible datetime wrapper)
+* [Async](https://github.com/caolan/async) **~29k** (helpful utility for avoiding long callback chains)
+* [Storage](http://www.jstorage.info/) **~31k** (a local storage wrapper for when cookie values get too long)
 
-Dependencies start at ~280kn, mostly on account of jQuery.
+The vendor directory can be augmented for additional client slide functionality or pared down for faster load times.
 
 ### Client Core
 
-Swell comes packaged with a small library of core client and side classes, namespaced `swell` which assist in easing manipulation of your models and collections as well as making some node.js conventions available instead of conforming to jQuery and BackboneJS methods. You are welcome, of course to use call and use conventions as you see fit. 
+**Enter the shortcuts.**  Swell comes packaged with a small library of core client and side classes, namespaced `swell` which assist in easing manipulation of your models and collections as well as making some node.js conventions available instead of conforming to jQuery and BackboneJS methods. 
 
-For example, the swell.Helpers method allows you to **circumvent the need to specify an error handler** for a simple `$.ajax` call. Instead, the following will work:
+For example, the swell.Helpers.ajax method allows you to **circumvent the need to specify an error handler** for a simple `$.ajax` call. Instead, the following will work:
 
     helpers.ajax '/examples/by_weight/', (err, res) =>
       return console.error(err) if err
       console.log 'examples by weight:', res
 
 
-Or, in the case of calling Backbone's [Model.save(http://backbonejs.org/#Model-save)], you can leverage a more node-like convention with error handing built-in:
+Or, in the case of calling Backbone's [Model.save](http://backbonejs.org/#Model-save), you can adopt a more node-like convention with error handing built-in:
 
 
     @model.push, (err, res) =>
@@ -70,7 +102,7 @@ Or, in the case of calling Backbone's [Model.save(http://backbonejs.org/#Model-s
       console.log 'model saved to server on:', moment(model.get('modified')).format('m/d/Y H:i:s')
 
 
-Currently, Swell has six objects which can be extended on the client: [swell.Collection](/page/collection), [swell.Form](/page/form), [swell.Helpers](/page/helpers) (extended by `views/_helpers.coffee` by default), [swell.List](/page/list), [swell.model](/page/model) and [swell.Router](/page/router). Review each link to the core API documentation for more information on how to use each one.
+Currently, Swell has six objects which can be extended on the client: [swell.Collection](/page/api.client.collection), [swell.Form](/page/api.client.form), [swell.Helpers](/page/api.client.helpers) (extended by `views/_helpers.coffee` by default), [swell.List](/page/api.client.list), [swell.model](/page/api.client.model) and [swell.Router](/page/api.client.router). Review each link to the core API documentation for more information on how to use each one.
 
 ### Packaging
 
@@ -78,8 +110,6 @@ When it comes time to deploy your application, it should first be packaged and m
 
     $ swell -p 
     
-This will minifiy and concat your javascript, template, and ventor development targets into `public/production.js`. 
-
-For further tips on deployment review the [deploying](/page/deploy) section in documentation.
+By default, this will minifiy and concat your javascript, template, and ventor development targets into `public/production.js`. 
 
 

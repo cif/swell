@@ -2,8 +2,8 @@
   "name": "A New Swell App",
   "about": "About your app",
   "author": "you@email.com",
-  "version": "0.1",
-  "swell": ">= 0.1",
+  "version": "0.2",
+  "swell": ">= 0.2",
   "client": {
     "compiler": "coffee",
     "folders": [
@@ -58,20 +58,37 @@
       "/": "Pages.index",
       "/page/:view": "Pages.page"
     },
+    "views": "views",
+    "layout": "layouts/app",
     "enable_markdown": true,
+    "port": 3030,
+    "timeout": 7000,
+    "cookie_hash": "cookie-hash-you-should-change",
+    "cookie_secret": "cookie-secret-you-should-change",
+    "socket_io": {
+      "log level": 1,
+      "namespace" : "/"
+    },
     "resources": {
-      "mongo-example": {
+      "mongo-swell": {
         "engine": "mongo",
         "db": "swell",
         "host": "127.0.0.1",
         "port": "27017"
       },
-      "mysql": {
+      "mysql-flybook": {
         "engine": "mysql",
         "db": "flybook",
         "host": "216.228.174.155",
         "user": "fb-test",
         "password": "3XAmPl3!"
+      },
+      "mysql-swell": {
+        "engine": "mysql",
+        "db": "swell",
+        "host": "127.0.0.1",
+        "user": "swell",
+        "password": "sw311!"
       }
     },
     "coffee": {
@@ -95,15 +112,6 @@
         ".coffee"
       ],
       "exports": true
-    },
-    "views": "views",
-    "layout": "layouts/app",
-    "port": "3030",
-    "timeout": 3000,
-    "cookie_hash": "cookie-hash-you-should-change",
-    "cookie_secret": "cookie-secret-you-should-change",
-    "socket_io": {
-      "log level": 1
-    }
+    }    
   }
 }

@@ -1,0 +1,31 @@
+# swell.List example
+
+There aren't too many apps out there these days that don't have lists in one form or another. 
+
+Whether it's messages, contacts, orders or examples the **goal of swell.List is to ease common list interactions**. These include, searching, sorting (grids), reordering etc. Naturally, **swell.List broadcast events** when items are interacted with.
+
+### Examples
+*Here's a simple drag and drop list example of our object names and colors:*
+<div class="simple"></div>
+<br>
+
+*Here's an example of a simple heading-sortable grid:*
+<div class="grid"></div>
+<br>
+All the interactions in these two exampels are handled by the core swell.List object so the router code in the previous section required is minimal, but extensible. in Swell, nearly everything is **bound with events** as opposed to relying on function callbacks globals.
+
+*Here's the code that renders both the sortable list and the grid:*
+      
+      ...
+      list: (search) =>
+        helpers.render 'section[role=main]','examples.list', @app, =>
+          helpers.loader '.simple,.grid'
+          examples.grab (err, models) =>
+            display = if search then @collection.search(search, 'name') else models
+            @list.render 'examples.list_simple', examples: display
+            @grid.render 'examples.list_grid', examples: display
+      ...
+
+### Templating  Your Lists
+
+Context to your [DustJS](https://github.com/linkedin/dustjs/wiki/Dust-Tutorial). There are a few ways in which

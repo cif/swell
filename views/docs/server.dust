@@ -1,11 +1,9 @@
 # Server
 
-### Overview
-
-The server is a collection of javascript objects each which handle different aspects of the request and response pipeline, keeping extension of each clean. In most cases, **extensions to core functionality are implemented in middleware.js**. For example, if you wanted to install [Passport](http://passportjs.org/) as your authentication service, then all you would have to do is install the module with npm, and add the appropriate routes to the middleware.js setup() method.
+At its core, Swell server is essentially just a stubbed out [Express](http://expressjs.com/) app that you can extend as needed. For example, if you wanted to install [Passport](http://passportjs.org/) as your authentication service, then all you would have to do is install the module and add the appropriate routes.<br> The compiled [Responder](/page/server#responders), [Collection](/page/server#collections) and [Model](/page/server#models) objects are the sugar in your coffee.
 
 ### Pipeline
-The server objects handle the request / response flow in left to right order:
+The modules in `server/` work together to handle the request and response flow:
 <div class="flow">
   <h5>server.js</h5>
   <p><b>server/server.js</b> instantiates <a href="http://nodejs.org/api/http.html">HTTP</a>, <a href="https://www.npmjs.org/package/express">express</a> as well as the <a href="http://expressjs.com/4x/api.html#middleware">middleware</a>, and the other components. It also <b>watches for changes to swell.js</b> and reloads them for save n' go development.</p>
@@ -64,45 +62,41 @@ There are two ways in which requests are routed to a responder object method (lo
 
 ### Responders
 
-Responders are objects containing methods called by router.js on each request. Methods take two arguments: `(req, callback)`. `req`, is the express request object in addition to query string and multipart / form-data stored in `req.data`. The second argument is the callback: `callback(err, data, emit)` whose arguments are passed to `server/render.js` (and `server/socket.js` if emit argument is specified) for final output. Node's standard callback argument pattern `(err, result)` makes it possible to pass the callback argument to directly to the functions which fetch data or perform operations.
+The router module will map and call methods on your responder objects. The methods take two arguments, `req` and `callback`. The **req argument is the standard express req argument you would get specifiying an express route**. Router.js will also parse additional query string and multipart / form-data and pass as `req.data`. 
 
-*An excerpt from router "Examples" (in coffeescript):*
+The second argument is a callback: `callback(err, data)` which is passed back to the router then on to to `server/render.js` (and `server/socket.js` if data.emit is specified for final output.  Often, the standard callback pattern `(err, result)` makes it possible to pass the callback argument to directly to the functions which fetch data or perform operations.
+
+*An excerpt from a responder "Examples" (in coffeescript):*
 
     class Examples extends swell.Responder
       
       # require nodejs modules like this
       async = require 'async'
       
-      # specify a collection
+      # specify a default collection to work with
       collection: collections.Examples
       
       # exposes the core get, post, put, delete methods
       expose_rest: true
   
       color: (req, callback) =>
-        new @collection @config, (err, @collection) =>
-          # note direct passing of callback and uri_params (inflected)
-          @collection.query color: req.uri_params[0], callback 
+        @collection.query color: req.uri_params[0], callback 
           
       shapes: (req, callback) =>
-        new @collection @config, (err, @collection) =>
-          @collection.query is_shape: true, callback   
+        @collection.query is_shape: true, callback   
       
-      # this takes id because it is specified in routes    
+      # this takes id because it is specified in routes config    
       edit: (req, id, callback) =>  
-        new @collection @config, (err, @collection) =>
-          @collection.get req.params.id, (err, example) =>
-            return callback(err) if err
-            result =
-              example: example
-              view: 'examples/edit'
-              emit: 
-                message: 'example ' + req.params.id + ' being opened for editing'
-                
-              
+        @collection.get req.params.id, (err, example) =>
+          return callback(err) if err
+          res =
+            example: example
+            view: 'examples/edit'
+          callback null, res  
+                              
       ...    
 
-In this example, a GET request to */examples/color/red* would return JSON representing list of examples matching color:'red'. Additional methods can be created and will map automatically via URI mapping. Responder classes, in addition to models and collections are compiled into **server/swell.js**. When watching, changes will be reflected in each request made to the server. 
+In this example, a GET request to */examples/color/red* would return a JSON array of examples matching color:'red'. Additional methods defined will map automatically to your URI patterns.  Responder classes, in addition to models and collections are compiled into **server/swell.js**. When watching, changes will be reflected in each request made to the server. 
 
 ### Collections
 
@@ -116,6 +110,7 @@ Collection objects are the primary objects your responders will interact with. s
       url: '/examples/'
       resource: 'mongo'
       store: 'examples'
+      synchroize: true
       sort_by: 'sort_order'
       list: ['_id','name']
      
@@ -153,7 +148,7 @@ swell.Responder defines `get`,`post`,`put`, and `delete` methods which may be ca
 
 ### Data
 
-The configuration file **swell.json** (check out [starting out](/page/start) section if you missed it) is where data sources are defined. Two types of databases are supported by the core swell.Collection class currently: **MySQL** and **MongoDB**.  Because **swell.Collection classes are compiled on the client**, you **don't want to expose your connection strings**.  Instead, specify a key by name, using `engine` to tell Swell which engine to use.
+The configuration file **swell.json** (check out [starting out](/page/start) section if you missed it) is where data sources are defined. Two types of databases are supported by the core swell.Collection class currently: **MySQL** and **MongoDB**.  Because **swell.Collection classes are compiled to a client-side js file**, you **don't want to expose your connection strings**.  Instead, specify a key by name, using `engine` to tell Swell which engine to use.  If you want to interface with third party APIs, your **responders are not compiled to the client** so connection data there is generally safe.
 
 *An example of two different data sources defined in swell.json:*
 
@@ -196,7 +191,3 @@ Unless you are creating a PhoneGap or single page application, you may run into 
     $ swell -c "server.enable_markdown" "false" 
         
 
-        
-
-_____________
-{>"partials/credit"/}

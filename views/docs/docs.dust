@@ -1,6 +1,8 @@
-# Overivew
+# Swell
 
-Swell **is not a framework**, but rather a collection of compilers and a thin core library of objects that **speed the development of javascript apps.** Because both the client and server use javascript, your application's models and collections can be maintained in single constructs that extend **swell.Model** and **swell.Collection**. Swell is designed so that connected clients' versions of those constructs **keep in sync realtime**.
+## Champion of the unobligatory shorcut
+
+Swell is **not a framework**, but rather a collection of compilers and a thin core library of objects that **speed the development of javascript apps.**
 
 ### Under the hood
 
@@ -8,11 +10,14 @@ Swell compiles [Coffeescript](http://coffeescript.org/) objects into javascript 
 
 ### Exposure
 
-Swell applications always expose the core [server](/page/server) modules giving you full control over the entire request and response pipeline. **If you prefered to write in javascript** you could remove compiler targets in your config, write your code anywhere and then require it in **middleware.js**.
+Swell applications always expose the core [server](/page/server) modules giving you full control over the entire request and response pipeline. The core [client](/page/client) modules are also exposed and included in your compiled app.
 
-If you are developing exclusivey on the client, [brunch](http://brunch.io/) or [grunt](http://gruntjs.com/) are better choices. 
+If you are developing exclusivey on the client or simply dont like coffeescript, [brunch](http://brunch.io/) or [grunt](http://gruntjs.com/) are better choices. 
+
+### Isomorphic... yet not
+
+For apps to be isomorphic by definition, the code that comprises them runs on both the client and the server which is **not *really* the case with Swell.**  While your data constructs are **defined in one place** and extend what appears to be the same class, in practice the objects they extend are two different objects designed to run on each client and server.
+
+<br>
 
 Ready? [Let's get started](/page/start)
-_______________________________
-
-{>"partials/credit"/}

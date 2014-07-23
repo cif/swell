@@ -60,7 +60,7 @@
    // failed to match route
    res.set('Content-Type','text/plain');
    res.status(500);
-   res.send('[swell] server executed a route, but failed to match! Note: splats yet to be unsupported')
+   res.send('[swell] server executed a route but failed to match the configuration list! Note: splats are not yet supported.')
    
    
  }; //end route()
@@ -130,10 +130,24 @@
          uri_args.shift();
          req.uri_params = uri_args;
          
-         var method_args = [req, function(err, data, emit){
+         var method_args = [req, function(err, data){
+           
+           // rendering engine requires data is an object
            var data = data || {};
-           render.out(err, data, emit, res);
-           controllers[responder].after(err, res); // call after render has completed
+           
+           // render it
+           render.out(err, data, res);
+           
+           // see if there is any data to emit through sockets
+           if(data.emit){
+      
+             if(!data.emit.space) data.emit.space = '/';
+             socket.emit(req, data.emit.space, data.emit.event, data);
+      
+           }
+           // call after() when render has completed
+           controllers[responder].after(err, res);
+           
          }];
          
          // call the controller method
@@ -144,14 +158,14 @@
        
      } else {
        
-       render.out(new Error('[swell-router] missing expected responder class method: ' + responder + '.' + method), false, false, res);
+       render.out(new Error('[swell-router] missing expected responder class method: ' + responder + '.' + method), null, res);
      
      }
      
      
    } else {
      
-     render.out(new Error('[swell-router] missing expected responder class: ' + responder), false, false, res);
+     render.out(new Error('[swell-router] missing expected responder class: ' + responder), null, res);
      
    }
    
@@ -165,7 +179,7 @@
    // instantiate all the responders in advance
    // dont need to do this each request, obviously
    for(obj in service.responders){
-     controllers[obj] = new service.responders[obj];
+     controllers[obj] = new service.responders[obj](config);
    }
    
      

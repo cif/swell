@@ -1,7 +1,7 @@
 
 class Users extends swell.Collection
   
-  resource: 'mysql'
+  resource: 'mysql-flybook'
   store:'users'
   list: ['id','name','username','email']
   

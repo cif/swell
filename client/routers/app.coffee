@@ -8,30 +8,29 @@ class Application extends Backbone.Router
   #routes:  
   #  '' : 'main' 
   
-  initialize: -> 
+  initialize: (options) ->   # options is used to pass in configuration 
+                             # variables directly to the constructor ("bootstrap")
     
-    # initialize helpers and high level objects
-    window.helpers = @helpers = new views.Helpers
-    @user = new models.User 
-    #@user.call '/users/authenticate', (err, res) =>
-    #  console.log res
+    # initialize helpers and synchro (sync manager class)
+    window.helpers = @helpers = new views.Helpers options
+    window.synchro = @synchro = new swell.Synchro options
     
-    # initialize any app routers here
-    @reports = new routers.Reports @
+    # initialize application routers
     @examples = new routers.Examples @
+    @reports  = new routers.Reports @
     
     # start the party
     Backbone.history.start()
     
     # return the app instance
-    console.log '[swell] app instantiated as window.app ' + moment().format('YYYY-MM-DD HH:mm:ss')
+    console.info '[swell] ' + moment().format('HH:mm:ss') + ' app instantiated as window.app '
     return @
     
   
   main: =>
+    # @user = new models.User 
     # @user.call '/users/authenticate', (err, data) =>
       # etc..
-  
   
   # allows registration of routers for app wide undelegate call
   # this frees up memory (big time!) in larger, multi-view applications
@@ -42,7 +41,7 @@ class Application extends Backbone.Router
     
   undelegate: (route) =>
     for router in @routers
-      router.unbind(route)
+      router.undelegate(route)
   
   
   

@@ -1,0 +1,42 @@
+@import 'func'
+
+highlight = rgba(0,0,0,0.06)
+shadow = rgba(0,0,0,0.1)
+
+.swell-list
+  box-sizing border-box
+  margin 0
+  padding 0
+  list-style none
+  
+  li
+    border-top 1px solid highlight
+    border-left 1px solid highlight
+    border-right 1px solid shadow
+    border-bottom 1px solid shadow
+    background-color #fff
+    padding 10px
+    margin-top -1px
+    
+
+.sortable
+  li:active
+    box-shadow 0 2px 4px rgba(0,0,0,0.3)
+    opacity 0.8
+    cursor move
+    
+
+table.grid
+  width 100%
+  th
+    text-align left
+    font-size 11px
+    padding 3px 10px
+    white-space nowrap
+  tr.odd,
+  tr:nth-child(even)
+    background #fff
+  tr:first-child
+    background transparent 
+  td
+    padding 5px

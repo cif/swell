@@ -26,7 +26,7 @@ class Pages extends swell.Responder
   #    swell -d  "server.routes./page/:view"
   page: (req, callback) =>
     data = 
-      view: 'docs/' + req.params.view
+      view: 'docs/' + req.params.view.replace(/\./g,'/')
       layout: 'layouts/page'
     callback null, data
   

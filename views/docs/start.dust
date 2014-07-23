@@ -1,21 +1,23 @@
 # Starting Out
 
-### Get Node.JS and NPM
-The easiest way to get Node.js is from their [downloads page](http://nodejs.org/download/). 
+Getting up an running takes less than a minute if you have node and npm installed...
+
+### Get NodeJS and NPM
+If you don't have it already, the easiest way to get Node.js and npm is from their [downloads page](http://nodejs.org/download/). 
 <br>You can also use [brew](http://brew.sh/) or another package manager to do job if that's how you roll.
 
-### Get Swell via NPM
+### Get Swell
 An easy one liner:
 
     npm install -g swell
 
 
-### Create your app
+### Create your first app
 To create your first app, cd anywhere you want to put the app then run the swell command with the **-n or --new** flag. To run the app, use the **-s or --server** flag.
 
     $ cd ~/Development/swell
-    $ swell -n staplr
-    $ cd staplr
+    $ swell -n examples
+    $ cd examples
     $ swell --server -w
 
 Note the use of **-w (--watch)**. This tells Swell to watch for changes and recompile. You can accomplish the same thing simply running `swell -ws`. 
@@ -23,7 +25,7 @@ Note the use of **-w (--watch)**. This tells Swell to watch for changes and reco
 Open [http://localhost:3030/](http://localhost:3030/) in your browser and if everything went well you'll see the [start page](/).
 
 ### swell.json
-**swell.json** lives in the root of your project's directory. This file (similar to a gruntfile) allows you to specify directories for complication, which compiler classes to use, data sources for your application, as well as any global variables you want use of in your application. Config variables are available as `@config.my_variable` or `this.config.my_variable` in [responder](/page/server#responders) methods, and the response (dust context) data returned to your views. For example, you could use <code>&lcub;config.version&rcub;</code> in your views to render that value. 
+**swell.json** lives in the root of your project's directory. This file (similar to a gruntfile) allows you to specify directories for complication, which compiler modules to use, data sources for your application as well as any global variables you want use of in your application. Config variables are available as `@config.my_variable` or `this.config.my_variable` in [responder](/page/server#responders) methods, and the response (dust context) data returned to your views. For example, you could use <code>&lcub;config.version&rcub;</code> in your views to render that value (like atop the left menu). 
 
 You can edit the file manually, or use the `-c` and `-d` command options to set configuration variables from the command line like so:
 
@@ -41,7 +43,3 @@ Swell has a few simple commands which assist with development (and production). 
     -c, --config    set a new or existing configuration variable in your json <key> <value>. (use quotes)
     -d, --remove    remove a <key> from json configuration. (use quotes)
     
-
-___________
-
-{>"partials/credit"/}

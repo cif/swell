@@ -1,0 +1,91 @@
+# swell.Router
+
+### Routing
+Routing is the way in which Backbone provides history to the browser by watching for changes in `window.location.hash`. 
+
+For more information check out [BackboneJS's Router](http://backbonejs.org/#Router) documentation. The single router servicing this app example is `client/routers/examples.coffee`.
+
+*Here's a an exerpt of that code:*
+
+    class Examples extends swell.Router
+    
+      title: 'Swell Client Examples'
+      collection: new collections.Examples
+      routes:
+        'home' : 'home'
+        'router' : 'router'
+        'list/search' : 'search'
+        'list/search/:query' : 'search'
+        'list' : 'list'
+        'edit/:id' : 'edit'
+  
+      init: (@app) =>
+        window.examples = @collection = new collections.Examples
+        @list = new swell.List el: '.simple', sortable: true
+        grid = 
+          el: '.grid', sortable: false
+          columns: ['name','color','length','created_on']
+          fields: new models.Example().fields
+        @grid = new swell.List grid
+        
+      home: =>
+        # no UI events to bind on the intro 
+        # so just render the home template 
+        helpers.render 'section[role=main]', 'examples.home', @app, true
+    
+      ...  
+
+### Binding & Unbinding
+**Now is a good time to open your console**. Refresh the page and take note of the info that Swell is logging, partiulary `unbinding route:router` and `binding route:router`.  Swell is **automatically undelegating and unbinding all other app routers** and then binding the current in-use router.
+
+Because of this, `bind()` and `unbind()` methods on your router are an ideal place to bind your data to your views. The unbinding of your events and listeners saves valuable memory and allows Bakcbone.View events to share common class names e.g. <br>`'click .save' : 'save'` without misfiring events. 
+
+*Here's how we are binding our examples app data and views together:*
+
+      ...
+      bind: =>
+    
+        # bind the our list sorting
+        @list.on 'sorted', @collection.sorted
+        
+        # when the collection gets updates re-render the simple list
+        # but, call update() on the grid in case it is user sorted
+        examples.on 'updated', (res) =>
+          @list.render 'examples.list_simple', examples: examples.models
+          @grid.update
+        
+          
+      unbind: =>
+        @list.off 'sorted'
+        examples.off 'updated'
+      ...
+
+Lastly, in order for that magic to happen we need to **initialize our router in the main application object**. 
+
+*Here's an example main Application object:*
+
+    class Application extends Backbone.Router
+  
+      initialize: -> 
+    
+        # initialize core helpers and synchro
+        window.helpers = @helpers = new views.Helpers
+        window.synchro = @synchro = new swell.Synchro 'example-app'
+    
+        # initialize application routers
+        @examples = new routers.Examples @
+    
+        # start the party
+        Backbone.history.start()
+    
+        # return the app instance
+        console.info '[swell] ' + moment().format('HH:mm:ss') + ' app instantiated as window.app '
+        return @
+        
+      ...
+
+Constructing your routers **using @ (this) as the first argument** tells the router to register itself with the app. Any additional arguments you pass can be recieved by your implementaitons `init()` method.
+
+
+
+Got all that? Let's check out [swell.List](#list)

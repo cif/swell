@@ -1,0 +1,39 @@
+# Socket.io
+
+## Keeping it in sync
+
+It's fast becoming a requirement that a web-based app will at least to some extent keep multiple connected clients in sync.  Several frameworks have done this well, but therein lies the problem &mdash; They *are* frameworks. <br>Instead of enforcing any given pattern **Swell starts with a bare-bones-default**, some cool optional features and lets you take it from there.
+
+### Handle REST and broadcast... at the same time
+Thanks to node and express, it's easy to send events to connected clients when things happen on the server. This **eliminates the need to send emit events from the client** in addition to your REST requests. Obviously, if you want to build in a chat window or public drawing board, it will make sense to do so and you can handle those events in `server/socket.js`'s setup() method.
+
+You might ask, **Why not forward socket emit events for persistence** from `io.on('connection', function(){ .. });`?  The short answer is: **What if that isn't what we want?**. Swell is designed so that if you are building a simple CMS, a weather API or a photo album; you can choose the features that best suit your needs.
+
+*Here's a responder method example of how we might send a `user:status` event to connected clients:*
+    
+    status_update: (req, callback) =>
+       @collection.update req.user, (err, callback) =>
+          return callback err if err
+          data =
+            user: req.user
+            emit:
+              event:'users:status'
+              space:'account:23214634'
+          callback null, data
+
+
+### One line setup with swell.Collection and swell.Responder
+
+Regardless of your storage choices, collections will make up the core of your app and keeping those collections in sync real-time **eliminate any potential for the classic multi-user overwriting issues when editing documents simultaneously.** This problem can extend to new documents as well. Here at [Flybook](https://www.theflybook.com), an up-to-date collection of reservations is critically important to ensuring that a new reservation record's time and date is truly available. 
+
+If you were paying close attention to the [server collections](/page/server#collections) section, you may have noticed the `synchronize: true` property being set in our example.  With that single line on your collection and `expose_rest: true` set on a linked Responder object the following default behaviors will take place:
+
+**On the server** the responder's built-in `post`, `put` and `delete` methods will broadcast the results of any data transactions to all connected clients.
+
+**On the client** your collection will automatically subscribe itself to events namespaced with the `store:` property. When events are emitted from the server, an update method is called which automatically adds new models, and merges changes to exiting models contained in an array `data.res`. Change events are fired accordingly, allowing you to notify users and update the UI if need be.
+
+
+### swell.synchro
+
+[swell.Synchro](/page/api.client.syncrho) is a small wrapper for [Socket.io](http://socket.io/) on the client which handles object subscription to appropriate namespaces, subscribing and unsubscribing to events. 
+

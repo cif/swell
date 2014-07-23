@@ -1,97 +1,63 @@
-
+# swell.List
+# provides some baseline functionality for lists and grids
+# 2014-07-21
+# github.com/cif/swell
+# email@benipsen.com
 
 class List extends Backbone.View
   
-  _events:
-    
-    # common UI events
-    'click tr td,.edit' : 'edit'
+  events: {}
+  
+  # these are common UI events that come with the standard list
+  # obviously, you should ensure class names are in your template
+  __events:
+    'click tr,li' : 'clicked'
     'click th.sortable' : 'sort'
-    'click .delete' : 'delete'
-    'click .create' : 'create'
-    'click .view' : 'read'
   
-  
-  #
-  #  initialize just extends the events automatically, careful to do this if you extend this class method!
-  #
+  # initialize extends the any events found 
+  # in the subclass so that they are delegated
+  # it also is used to establish the element,
+  # so that often it doesn't need to be sub'classed'
+  # further, it will setup ui events from properties
   initialize: (options) ->
-    @events = _.extend({}, @_events, @events)
+    _.extend(@, options)    # extend options and events
+    @events = _.extend({}, @__events, @events)
+    @init.apply(@, arguments)
     this
+    
+  init: (options) ->
+    
+  # render method takes the template, context 
+  # and an optional callback, uses the helper
+  render: (template, context, callback) =>
+    # extend the context by properties of this object
+    _.extend(context, @)
+    helpers.render @el, template, context, (err, res) =>
+      callback(err, res) if callback
+      $(@el + ' ol').sortable update:@sorted if @sortable  # make sortable if true
+  
+      
+  # it will bubble up the target parents to tr or the li
+  # so it's important that those contain the id of the object
+  clicked: (e) ->
+    while !(e.target.tagName is 'TR' or e.target.tagName is 'LI') 
+      e.target = e.target.parentNode
+    id = $(e.target).attr 'id'
+    @trigger 'clicked', id
+      
+  
+  # sort handler, loops over elements in the list and builds 
+  # small update id:sort pairs for ajax update sends event
+  sorted: (e) =>
+    ordered = {}
+    $(@el + ' ol li').each (index) ->
+      id = $(this).attr 'id'
+      ordered[id] = index
+    @trigger 'sorted', ordered
   
   
-  render: (template, data, headings) ->
-    
-    @template = template if template
-    @headings = headings if headings
-    @data = data if data
-    
-    @before()
-     
-    # default data is simply the collection models as template variable 'items'. 
-    # if the collection needs to be marshaled more than once (particuarly sorted) 
-    # you should do so in a custom before() method 
-    if !@data
-      @data = 
-        items: @collection.models
-    
-    @data.headings = @headings  
-    if @template
-      $(@el).html tmpl[@template](@data)
-    else if console and console.log
-      console.log('WARNING Flint.Grid: @template is undefined, unable to render view.')
-    
-    @trigger 'rendered', @
-    @after()
-    this  
-    
-  #
-  #  pre, post render
-  #  
-  before: ->  
-  after: ->
-  
-  #
-  #  crud, cred in this case ;-)
-  #    
-  create: ->
-    @trigger 'create'
-  
-  read: (e) ->
-    # bubble up the target parents until we find an id
-    target = $(e.target)
-    id = target.attr 'id'
-    while _.isUndefined id
-      target = target.parent()
-      id = target.attr 'id'
-      
-    @trigger 'read', id
-      
-  edit: (e) ->
-    # bubble up the target parents until we find an id
-    target = $(e.target)
-    id = target.attr 'id'
-    while _.isUndefined id
-      target = target.parent()
-      id = target.attr 'id'
-      
-    @trigger 'edit', id
-    
-  delete: (e) ->
-    # bubble up the target parents until we find an id
-    e.stopPropagation()
-    target = $(e.target)
-    id = target.attr 'id'
-    while _.isUndefined id
-      target = target.parent()
-      id = target.attr 'id'
-     
-    model = @collection.get(id)
-    @collection.remove(model)
-    false
-      
-  # grid view sorting by sortable columns.  
-  # sorting is done via simple quicksort
+  # grid view sorting by sortable columns - .sortable  
+  # sorting is done via simple quicksort impl
   sort: (e) =>
     
     # get the table we are sorting

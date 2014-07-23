@@ -5,29 +5,42 @@
 
 class Example extends swell.Model
   
-  idAttribute: '_id'  # this is important - validation will remove your keys if not specified
+  idAttribute: '_id'    # validation will remove your keys if not specified
   
   fields:
     name:
       type: 'string'
+      label: 'Name'
       not_empty: true
       not: 'bad'
       message: 'Custom description validation message'
     
     color:
       type: 'string'
+      label: 'Color'
       maxlength: 6
     
+    length:
+      type: 'number'
+      label: 'Length (in.)'
+      round: 2
+      
     sort_order:
       type: 'number'
       expr: /^#([0-9a-f]{3}|[0-9a-f]{6})$/
       length: 2
     
-    start_date:
+    datetime:
+      label: 'Last Seen'
       type: 'datetime'
-      future: false
+      past: false
+      format: 'MMM Do YYYY h:ma'
     
+    email: 
+      type:'email'
+      
+      
   defaults:
-    name: 'New Example'
+    name: 'This is fucking retarded'
     color: 'cc0000'
     

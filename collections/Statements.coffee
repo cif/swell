@@ -1,7 +1,7 @@
 
 class Statements extends swell.Collection
   
-  resource: 'mysql'
+  resource: 'mysql-flybook'
   store: 'statements'
   
   

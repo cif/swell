@@ -9,11 +9,10 @@
   <link rel="shortcut icon" href="/public/favicon.ico" />
   <link rel="stylesheet" href="/public/styles.css" />
 </head>
-<body class="swell">
- 
- {>"{_main}"/}
- 
-<script type="text/javascript" src="/socket.io/socket.io.js"> </script>  
+<body class="swell examples">
+<aside>{>"partials/menu"/}</aside>
+<section role="main"></section>
+<script type="text/javascript" src="/socket.io/socket.io.js"> </script>
 {@if cond="config.watching"}
 <script type="text/javascript" src="/js/deps.js?{@cache_buster/}"> </script>
 <script type="text/javascript" src="/js/tmpl.js?{@cache_buster/}"> </script>
@@ -23,7 +22,7 @@
 {/if}  
 <script type="text/javascript"> 
   var app; 
-  $(document).ready(function(){ app = new routers.Application(); }); 
+  $(document).ready(function(){ app = new routers.Application({nsp:'{config.server.socket_io.namespace}'}); }); 
 </script>
 </body>
 </html>

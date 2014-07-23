@@ -12,8 +12,8 @@ class Examples extends swell.Collection
   url: '/examples/'
   
   # which data resource to connect to
-  resource: 'mysql'
-  # resource: 'mysql-example'
+  resource: 'mysql-swell'
+  # resource: 'mongo-example'
   
   # which nosql store or rdb table to use
   store: 'examples'
@@ -24,5 +24,5 @@ class Examples extends swell.Collection
   # list will limit the fields retured to those specified
   # for larger stores this can drastically improve long list loading time
   # if no list is specified, everything in the model will be returned
-  list: ['_id','name','color']
+  list: ['_id','name','color','length','datetime']
   # list: false  

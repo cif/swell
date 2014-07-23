@@ -14,15 +14,28 @@
   
   var fs = require('fs');
   var dust = require('dustjs-linkedin');
+  var showdown = require('showdown');
+  var converter = new showdown.converter();
   var compile = function(file, namespace, callback){
     
     try{
       
       var name = namespace + '.' + file.replace(/\.dust/,'').substr(file.lastIndexOf('/') + 1, file.length);
-      var data = fs.readFileSync(file, 'utf8');
-      var compiled = dust.compile(data, name);
+      fs.readFile(file, 'utf8', function(err, data){
+        
+        try{
+        
+          var compiled = dust.compile(converter.makeHtml(data), name);
+          callback(null, compiled);
+        
+        } catch (e) {
       
-      callback(null, compiled);
+          callback(e);  // catch errors
+    
+        }
+         
+      });
+      
       
     } catch (e) {
       

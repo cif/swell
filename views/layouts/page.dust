@@ -9,14 +9,16 @@
   <link rel="shortcut icon" href="/public/favicon.ico" />
   <link rel="stylesheet" href="/public/styles.css" />
 </head>
-<body class="swell">
+<body class="swell docs">
   <iframe src="http://ghbtns.com/github-btn.html?user=cif&repo=swell&type=fork" allowtransparency="true" frameborder="0" scrolling="0" width="62" height="20"></iframe>
   <iframe class="watch" src="http://ghbtns.com/github-btn.html?user=cif&repo=swell&type=watch" allowtransparency="true" frameborder="0" scrolling="0" width="62" height="20"></iframe>
   <aside>
-    {>"partials/menu"/}
+    <div class="scroll">{>"partials/menu"/}</div>
   </aside>
   <section role="main">
     {>"{_main}"/}
+    <hr>
+    {>"partials/credit"/}
   </section>
 
 <script type="text/javascript" src="/socket.io/socket.io.js"> </script>  

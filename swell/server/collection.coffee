@@ -8,14 +8,17 @@
 class Collection
   
   # default database key
-  key: 'id'
+  key: '_id'
   
   # default sort order
   sort: 'sort_order'
   
   # constructor connects to the data source specified 
   # and calls back to the responder
-  constructor: (config, callback) ->
+  constructor: (config) ->
+    
+    # initialize the model class if one is specified
+    @model = new @model @ if @model
     
     # read data source from the config
     if @data = config.server.resources[@resource]
@@ -23,20 +26,9 @@ class Collection
       # set up the engine as appropriate
       @db = new swell.Mongo @ if @data.engine is 'mongo'
       @db = new swell.Mysql @ if @data.engine is 'mysql'
-    
-      # callbacks 
-      # mysql needs to issue a USE query before calling back
-      if @data.engine is 'mysql'
-        @db.use (err, res) =>
-          callback(err) if err
-          callback(null, @)
-      else if @db
-        callback(null, @)
-      else 
-        callback('[swell] could not connect to data source "'+@resource+'" :' + JSON.stringify(@data))
-    
+
     else
-      callback('[swell] your collection is attempting to locate an unspecified data resource "' + @resource + '". Define it in your configuration.')
+      console.log('[swell-server] a collection is attempting to locate an unspecified data resource "' + @resource + '".')
       
     
   # fetch method returns the entire collection of models
@@ -52,26 +44,31 @@ class Collection
   
   # retrieve a single record by id
   get: (id, callback) =>
+    callback null, []
     @db.get @key, id, callback
     
   # add saves a new model
   add: (data, callback) =>
-    
-    # make sure ther is a model validating the request
-    return callback '[swell] a model must be specified to use REST features' if typeof @model != 'function'
-    
-    # instantiate a model instance
-    @model = new @model data
+    # make sure there is a model validating the request
+    return callback '[swell] a model must be specified to use REST features' if !@model
     
     # clean / validate the data, throw an error if invalid data
-    cleaned = @model.validate(data)
-    console.log typeof cleaned
-    return callback('[swell] validation error: ' + cleaned) if typeof cleaned != 'undefined'
-    @db.insert @model.attributes, callback
+    cleaned = @model.sanitize(data)
+    
+    return callback('[swell] data sanitization error: ' + @model.invalid) if !cleaned
+    @db.insert cleaned, callback
   
   # update updates an existing model
   update: (data, callback) =>
-    @db.update @key, data, callback
+    
+    # make sure there is a model validating the request
+    return callback '[swell] a model must be specified to use REST features' if !@model
+    
+    # clean / validate the data, throw an error if invalid data
+    cleaned = @model.sanitize(data)
+    return callback('[swell] data sanitization error: ' + @model.invalid) if !cleaned
+    
+    @db.update data[@model.key], cleaned, callback
     
   # deletes a model from the database  
   remove: (data, callback) ->
@@ -84,7 +81,5 @@ class Collection
         if @list and @list.indexOf(prop.toString()) < 0
           delete doc[prop]
     res          
-    
-  # default comparator, used for sorting
-  comparator: (model) =>
-    return if @sort_by then model.get(@sort_by) else 0
+  
+  
