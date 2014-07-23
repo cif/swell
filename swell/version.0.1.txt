@@ -1,1 +1,0 @@
-This file tells swell (via file name) which version of the core the app is currently using.
