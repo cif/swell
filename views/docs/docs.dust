@@ -1,6 +1,6 @@
 # Swell
 
-## Champion of the unobligatory shorcut
+## Champion of the unobligatory shortcut
 
 Swell is **not a framework**, but rather a collection of compilers and a thin core library of objects that **speed the development of javascript apps.**
 
@@ -10,14 +10,12 @@ Swell compiles [Coffeescript](http://coffeescript.org/) objects into javascript 
 
 ### Exposure
 
-Swell applications always expose the core [server](/page/server) modules giving you full control over the entire request and response pipeline. The core [client](/page/client) modules are also exposed and included in your compiled app.
+Swell applications always expose the core [server](/page/server) modules giving you full control over the entire request and response pipeline. Core [client](/page/client) modules are also exposed and compiled in to your app realtime as opposed to being black-boxed in a vendor or public file.
 
-If you are developing exclusivey on the client or simply dont like coffeescript, [brunch](http://brunch.io/) or [grunt](http://gruntjs.com/) are better choices. 
+### Isomorphic... but not quite
 
-### Isomorphic... yet not
-
-For apps to be isomorphic by definition, the code that comprises them runs on both the client and the server which is **not *really* the case with Swell.**  While your data constructs are **defined in one place** and extend what appears to be the same class, in practice the objects they extend are two different objects designed to run on each client and server.
-
+For apps to be genuinely [isomorphic](http://isomorphic.net/), the code that comprises them runs on both the client and the server. This is **not *entirely* the case with Swell.**  Models and collections are **defined in one place** and extend what appears to be the same class, however when compiled they **extend two different objects** each of which intended to be run on the client or server &mdash; but not both! 
+ 
 <br>
 
-Ready? [Let's get started](/page/start)
+Ready for action? [Let's get started](/page/start)

@@ -12,7 +12,7 @@ Swell compiles [Coffeescript](http://coffeescript.org/) objects into javascript 
 
 Swell applications always expose the core [server](/page/server) modules giving you full control over the entire request and response pipeline. The core [client](/page/client) modules are also exposed and included in your compiled app.
 
-If you are developing exclusivey on the client or simply dont like coffeescript, [brunch](http://brunch.io/) or [grunt](http://gruntjs.com/) are better choices. 
+If you are developing exclusively on the client or dont like coffeescript, [brunch](http://brunch.io/) or [grunt](http://gruntjs.com/) are better choices. 
 
 ### Isomorphic... yet not
 

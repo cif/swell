@@ -5,69 +5,60 @@
   "version": "0.2",
   "swell": ">= 0.2",
   "client": {
-    "compiler": "coffee",
-    "folders": [
-      {
-        "swell": "swell/client"
-      },
-      {
-        "models": "models"
-      },
-      {
-        "collections": "collections"
-      },
-      {
-        "routers": "client/routers"
-      },
-      {
-        "views": "client/views"
-      }
-    ],
-    "output": "public/js/app.js",
-    "extensions": [
-      ".coffee"
-    ]
+    "app":{
+      "compiler": "coffee",
+      "folders": [
+        {
+          "swell": "swell/client"
+        },
+        {
+          "models": "models"
+        },
+        {
+          "collections": "collections"
+        },
+        {
+          "routers": "client/routers"
+        },
+        {
+          "views": "client/views"
+        }
+      ],
+      "output": "public/js/app.js",
+      "extensions": [
+        ".coffee"
+      ]
+    },
+    "dust": {
+      "compiler": "dust",
+      "folders": "client/dust",
+      "output": "public/js/tmpl.js",
+      "extensions": [
+        ".dust"
+      ]
+    },
+    "style": {
+      "compiler": "stylus",
+      "folders": "client/style",
+      "output": "public/styles.css",
+      "extensions": [
+        ".styl"
+      ]
+    },
+    "deps": {
+      "compiler": "deps",
+      "folders": "client/vendor",
+      "output": "public/js/deps.js",
+      "extensions": [
+        ".js"
+      ]
+    },
+    "production": "public/js/production.js"
   },
-  "templates": {
-    "compiler": "dust",
-    "folders": "client/dust",
-    "output": "public/js/tmpl.js",
-    "extensions": [
-      ".dust"
-    ]
-  },
-  "style": {
-    "compiler": "stylus",
-    "folders": "client/style",
-    "output": "public/styles.css",
-    "extensions": [
-      ".styl"
-    ]
-  },
-  "deps": {
-    "compiler": "deps",
-    "folders": "client/vendor",
-    "output": "public/js/deps.js",
-    "extensions": [
-      ".js"
-    ]
-  },
-  "production": "public/js/production.js",
   "server": {
     "routes": {
       "/": "Pages.index",
       "/page/:view": "Pages.page"
-    },
-    "views": "views",
-    "layout": "layouts/app",
-    "enable_markdown": true,
-    "port": 3030,
-    "timeout": 7000,
-    "cookie_hash": "cookie-hash-you-should-change",
-    "cookie_secret": "cookie-secret-you-should-change",
-    "socket_io": {
-      "log level": 1,
-      "namespace" : "/"
     },
     "resources": {
       "mongo-swell": {
@@ -90,6 +81,17 @@
         "user": "swell",
         "password": "sw311!"
       }
+    },
+    "views": "views",
+    "layout": "layouts/app",
+    "enable_markdown": true,
+    "port": 3030,
+    "timeout": 7000,
+    "cookie_hash": "cookie-hash-you-should-change",
+    "cookie_secret": "cookie-secret-you-should-change",
+    "socket_io": {
+      "log level": 1,
+      "namespace" : "/"
     },
     "coffee": {
       "compiler": "coffee",

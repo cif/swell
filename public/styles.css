@@ -88,6 +88,46 @@ section[role=main] blockquote {
   font-size: 11px;
 }
 
+/* layouts for the examples app components (forms styled separately) */
+div.grid {
+  position: relative;
+}
+div.grid input[type=text] {
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+
+input[type=text],
+input[type=password],
+input[type=email],
+textarea {
+  border-top: 1px solid rgba(0,0,0,0.10);
+  border-left: 1px solid rgba(0,0,0,0.10);
+  border-right: 1px solid rgba(0,0,0,0.06);
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+  padding: 5px;
+}
+input[type=text]:focus,
+input[type=password]:focus,
+input[type=email]:focus,
+textarea:focus {
+  border: 1px solid rgba(0,0,0,0.40);
+  outline: none;
+}
+input[type=text].error,
+input[type=password].error,
+input[type=email].error,
+textarea.error {
+  border: 1px solid '#c00';
+}
+input[type=text].validated,
+input[type=password].validated,
+input[type=email].validated,
+textarea.validated {
+  border: 1px solid '#0c0';
+}
+
 
 .swell-list {
   -webkit-box-sizing: border-box;
@@ -122,6 +162,15 @@ table.grid th {
   padding: 3px 10px;
   white-space: nowrap;
 }
+table.grid th.sortable {
+  cursor: pointer;
+}
+table.grid tr {
+  -webkit-transition: all 0.25s ease-out;
+  -moz-transition: all 0.25s ease-out;
+  -o-transition: all 0.25s ease-out;
+  -ms-transition: all 0.25s ease-out;
+}
 table.grid tr.odd,
 table.grid tr:nth-child(even) {
   background: #fff;
@@ -131,6 +180,10 @@ table.grid tr:first-child {
 }
 table.grid td {
   padding: 5px;
+  font-size: 12px;
+}
+table.grid tr:hover {
+  background: #eee;
 }
 
 .loader {
@@ -307,10 +360,10 @@ table.grid td {
 aside {
   position: fixed;
   top: 0;
-  padding: 25px 20px;
   width: 160px;
   background: #fff;
   height: 100%;
+  overflow: hidden;
 }
 aside h4 {
   margin-top: 15px;
@@ -343,6 +396,12 @@ aside ul li a.selected + ul li a {
 }
 aside ul li a.selected + ul li a:hover {
   color: #d88f2a;
+}
+aside .scroll {
+  padding: 25px 20px;
+  height: 100%;
+  width: 175px;
+  overflow: auto;
 }
 
 * {

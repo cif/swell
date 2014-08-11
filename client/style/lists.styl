@@ -33,6 +33,10 @@ table.grid
     font-size 11px
     padding 3px 10px
     white-space nowrap
+  th.sortable 
+    cursor pointer
+  tr
+    transition()
   tr.odd,
   tr:nth-child(even)
     background #fff
@@ -40,3 +44,7 @@ table.grid
     background transparent 
   td
     padding 5px
+    font-size 12px
+  
+  tr:hover
+    background #eee

@@ -12,7 +12,7 @@ class Collection extends Backbone.Collection
     if @sort_by
       return +model.get(@sort_by)
     else
-      return 1  
+      return 0  
   
   # initialize (constructor) will begin listening
   # for changes from the server, and broadcast
@@ -48,6 +48,7 @@ class Collection extends Backbone.Collection
       @add attr, merge:true
     @trigger 'updated', @
   
+  
   # a few unique swell.Collection client side 
   # methods, line up with node.js callback standards
   #  no need to define success: and error: each call
@@ -61,9 +62,8 @@ class Collection extends Backbone.Collection
     else
       callback(null, @models)
   
-  # snag, is basicaslly like get but will issue a pull
-  # request automatically if the collection is empty then
-  # return the model
+  # snag, is just like get but will issue a pull
+  # request automatically if the collection is empty 
   snag: (id, callback) =>
     if @models.length is 0
       @pull (err, res) =>
@@ -71,17 +71,17 @@ class Collection extends Backbone.Collection
     else
       callback @get(id)
       
-  # pull, gets the latest batch from the server with node
+  # pull, gets the latest collection from the server
   pull: (@callback, options) =>
     options = _.extend @response_callback, options
     @operation = 'pull'
     @fetch options
   
-  # sorted usually gets called from sorted events
+  # sorted is typically called from sorted events
   # fired by list views, takes {id:sort} pairs
   sorted: (ordered) =>
     
-    # update the server via our @call method. 
+    # update the server via ajax helper method
     # the broadcast will reach here too, calling twice seems reduntant ?
     handler = (err, res) ->
       console.error '[swell] ' + moment('HH:mm:ss') + ' error sorting a collection: ' + err.responseText if err

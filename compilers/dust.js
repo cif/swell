@@ -20,6 +20,11 @@
     
     try{
       
+      if(namespace === '')
+        space = '';
+      else
+        space = namespace + '.';
+        
       var name = namespace + '.' + file.replace(/\.dust/,'').substr(file.lastIndexOf('/') + 1, file.length);
       fs.readFile(file, 'utf8', function(err, data){
         

@@ -1,8 +1,6 @@
 # Nice! You're up
 
-This HTML is rendered by `views/index.dust` wrapped by `views/layouts/page.dust`.  
+This lovely message is rendered by `views/index.dust` and wrapped by `views/layouts/page.dust`. <br>Modify these views, update your [routes ](/page/server#routes) or change the index method in `responders/pages.coffee` to get started.
 
-If you want your application to have an index page, modify those views and/or  **update the default route or Pages.index() method** before you get rolling.
-
-**New to swell?**
-<br>We suggest you read [the documentation](/page/docs). 
+## New here?
+We suggest you read [the documentation](/page/docs).

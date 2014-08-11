@@ -30,5 +30,9 @@
  <script type="text/javascript" src="/js/production.js?{@cache_buster/}"> </script>
 {/if}  
 <script type="text/javascript"> var app; $(document).ready(function(){ app = new routers.Application(); }); </script>
+<script type="text/javascript">
+  // This can be removed, it's a super simple function that allows the side menu to be scrolled vertically
+  
+</script>
 </body>
 </html>

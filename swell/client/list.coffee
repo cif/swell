@@ -23,6 +23,7 @@ class List extends Backbone.View
     _.extend(@, options)    # extend options and events
     @events = _.extend({}, @__events, @events)
     @init.apply(@, arguments)
+    @el_str = @el  # not sure why, but view.setElement makes @el a node ref rather than string ?
     this
     
   init: (options) ->
@@ -32,9 +33,11 @@ class List extends Backbone.View
   render: (template, context, callback) =>
     # extend the context by properties of this object
     _.extend(context, @)
-    helpers.render @el, template, context, (err, res) =>
+    @setElement(@el_str)
+    helpers.render @el_str, template, context, (err, res) =>
       callback(err, res) if callback
-      $(@el + ' ol').sortable update:@sorted if @sortable  # make sortable if true
+      $(@el_str + ' ol').sortable update:@sorted if @sortable  # make sortable if true
+      
   
       
   # it will bubble up the target parents to tr or the li
@@ -43,21 +46,21 @@ class List extends Backbone.View
     while !(e.target.tagName is 'TR' or e.target.tagName is 'LI') 
       e.target = e.target.parentNode
     id = $(e.target).attr 'id'
-    @trigger 'clicked', id
+    @trigger 'clicked', id, e
       
   
   # sort handler, loops over elements in the list and builds 
   # small update id:sort pairs for ajax update sends event
   sorted: (e) =>
     ordered = {}
-    $(@el + ' ol li').each (index) ->
+    $(@el_str + ' ol li').each (index) ->
       id = $(this).attr 'id'
       ordered[id] = index
-    @trigger 'sorted', ordered
+    @trigger 'sorted', ordered, e
   
   
-  # grid view sorting by sortable columns - .sortable  
-  # sorting is done via simple quicksort impl
+  # grid view sorting by sortable columns th.sortable
+  # sorting is done via quicksort method
   sort: (e) =>
     
     # get the table we are sorting
@@ -68,18 +71,25 @@ class List extends Backbone.View
     # determine the direction and column to sort on   
     index = $('tr th').index(e.target)
     heading = e.target
-    @sort_data_type = $(e.target).attr('data-type')
     if !@sorting_dir 
       @sorting_dir = 1
 
     if heading is @heading
       @sorting_dir *= -1
 
+    # determine the data type to sort by (if applicable)
+    @sort_data_type = 'string'
+    @sort_data_type = 'number' if $(e.target).hasClass('number')
+    @sort_data_type = 'date' if $(e.target).attr('class').indexOf('date') >= 0
+    console.log @sort_data_type
+    
+    # update the heading itself
     @heading = e.target
-    $('tr th').css 'font-weight','300'
+    $('tr th').removeClass 'sorted-up sorted-down'
     $('tr th span').remove()
     arrow = if @sorting_dir is -1 then '<span>&uarr;&nbsp;</span>' else '<span>&darr;&nbsp;</span>'
-    $(e.target).css 'font-weight','bold'
+    clas = if @sorting_dir is -1 then 'sorted-up' else 'sorted-down'
+    $(e.target).addClass clas
     $(e.target).html arrow + $(e.target).html()
     
     @sort_index = index
@@ -99,49 +109,57 @@ class List extends Backbone.View
     for tr in items
       $(table_root).append(tr)
     
+    @trigger 'sorted:grid', @heading, @sorting_dir
     
+  quicksort: (items, begin, end) =>
+    if (end-1) > begin
+      pivot = begin + Math.floor(Math.random()*(end-begin))
+      pivot = @partition(items, begin, end, pivot)
+      @quicksort(items, begin, pivot)
+      @quicksort(items, pivot+1, end)
+        
   partition: (items, begin, end, pivot) =>
     pivot_val = items[pivot]
     @swap(items, pivot, end-1)
     store = begin
     for i in [begin...(end-1)]
-        if @compare(items[i],pivot_val)
-          @swap(items, store, i)
-          store++
+      if @compare(items[i],pivot_val)
+        @swap(items, store, i)
+        store++
     @swap(items, end-1, store)
     store      
           
   compare: (a, b, type = false) =>
       
-      a = $(a.getElementsByTagName('td')[@sort_index]).html() 
-      b = $(b.getElementsByTagName('td')[@sort_index]).html()
-      
-      if @sort_data_type
-        if @sort_data_type is 'date'
+    a = $(a.getElementsByTagName('td')[@sort_index]).html()
+    b = $(b.getElementsByTagName('td')[@sort_index]).html()
+    
+    if @sort_data_type
+      if @sort_data_type is 'date'
+        
+        if a.indexOf('-') > 0
+          a = a.substring(0, a.indexOf(' -'))
+        if b.indexOf('-') > 0
+          b = b.substring(0, b.indexOf(' -'))  
+        
+        a = moment(a)
+        b = moment(b)
+        if isNaN(a.toDate().getTime())
+          a = moment(0)
+        if isNaN(b.toDate().getTime())
+          b = moment(0)
           
-          if a.indexOf('-') > 0
-            a = a.substring(0, a.indexOf(' -'))
-          if b.indexOf('-') > 0
-            b = b.substring(0, b.indexOf(' -'))  
-          
-          a = moment(a)
-          b = moment(b)
-          if isNaN(a.toDate().getTime())
-            a = moment(0)
-          if isNaN(b.toDate().getTime())
-            b = moment(0)
-            
-        if @sort_data_type is 'number'
-          a = parseFloat a.replace(/[A-Za-z$,]/g, '')
-          b = parseFloat b.replace(/[A-Za-z$,]/g, '')
-          if isNaN(a)
-            a = 0
-          if isNaN(b)
-            b = 0
-          
-      if @sorting_dir is 1
-        return a < b 
-      else
+      if @sort_data_type is 'number'
+        a = parseFloat a.replace(/[A-Za-z$,]/g, '')
+        b = parseFloat b.replace(/[A-Za-z$,]/g, '')
+        if isNaN(a)
+          a = 0
+        if isNaN(b)
+          b = 0
+        
+    if @sorting_dir is 1
+      return a < b 
+    else
         return a > b
   
   swap: (array, a, b) =>
@@ -150,11 +168,6 @@ class List extends Backbone.View
     array[b] = tmp
     return array
   
-  quicksort: (items, begin, end) =>
-    if (end-1) > begin
-      pivot = begin + Math.floor(Math.random()*(end-begin))
-      pivot = @partition(items, begin, end, pivot)
-      @quicksort(items, begin, pivot)
-      @quicksort(items, pivot+1, end)
+ 
     
   

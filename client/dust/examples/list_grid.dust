@@ -1,16 +1,19 @@
+<div class="search"><input type="text" name="q" placeholder="Search" /></div>
 <table class="grid">
   <tr>
     <th></th> <!-- selection placeholder -->
     {#columns}
-      <th class="{@prop key=. obj=fields field="type"/}">{@prop key=. obj=fields field="label"/}</th>
+      <th class="{@eq value=fields[.].sortable}sortable {/eq}{@prop key=. obj=fields field="type"/}">{@prop key=. obj=fields field="label"/}</th>
     {/columns}
+    <th></th>
   </tr>
   {#examples}
-    <tr>
-      <td>
+    <tr id="{attributes._id}">
+      <td>{@checkbox name="active" bind="_id" obj=attributes /}</td>
       {#columns}
-        <td class="{type}">{attributes[.]}</td>
+        <td data-bind="{.}">{attributes[.]}</td>
       {/columns}
+      <td><button class="edit">Edit</button></td>
     </tr>
   {/examples} 
 </table>   

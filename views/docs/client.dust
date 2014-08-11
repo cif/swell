@@ -1,15 +1,13 @@
 # Client
 
 
-True to the promise of flexibility, client side development in Swell is not limited by constraints. The only convention is a reliance on [BackboneJS](http://backbonejs.org) which, like Swell is not a framework but rather *"... gives structure to web applications by providing models with key-value binding and custom events, collections with a rich API of enumerable functions, views with declarative event handling...*" <br>Of course, there are many built-in shortcuts for you to take advantage of.
+The only convention on the client is a reliance on [BackboneJS](http://backbonejs.org) which like Swell is not a framework but provides a basic structure and event binding schema. <br>You can to **structure the client side of a Swell app any way you like** but of course, there are **many shortcuts** for you to take advantage of.
 
 ### Structure
-How you structure your application on the client is entirely up to you and can easily be changed with modifications to your configuration file. Worth noting however, is that `/models` and `/collections` are **simultaneously compiled to facilitate services on the server**, so you'll want to be sure those line up regardless of where you put them.
+Directory structures and targets can easily be changed with modifications to your configuration file. Worth noting however is that `/models` and `/collections` are **simultaneously compiled to facilitate services on the server**, so you'll want to be sure those line up regardless of where you put them.
 
 ### Namespacing
-With the exception of dependencies, javascript and template objects are **namespaced recursively by folder structure**. By default, the client side javascript application is compiled into `public/app.js`. A list of folders which comprise the **primary namespaces of the application are specified with the configuration file**. The defaults are `client/routers`, available as `routers` in the application, and `client/views` available as `views`.  
-
-Subsequent folder structures are recursively namespaced. For example, if you were to create a subfolder `client/views/examples` containing a file called `editor.coffee`:
+With the exception of dependencies, javascript and javascript-template objects are **namespaced recursively by folder structure**.  The `folders` property in each client configuration object is an array of `namespace: directory` value pairs. Any sub folders are recursively namespaced. For example, if you were to create a subfolder `client/views/examples` containing a file called `editor.coffee`:
 
 
     class Editor extends swell.Form
@@ -18,7 +16,7 @@ Subsequent folder structures are recursively namespaced. For example, if you wer
 
 This object could be instantiated with this code `@example_editor = new views.examples.Editor`. The same is true of any folder you target and namespace using your configuration file.   
 
-**Files are complied in alphabetical order.**  To accommodate potential issues with this, you can use _ (like `views/_helpers.coffee) to ensure that object which you extend are defined first at runtime. A cleaner way, is to use the "break out" folders if need be. **The compiler configuration takes an array of namespace and folder pairs**.
+**NOTE: Files are complied in alphabetical order.**  To accommodate potential issues with this, you can use _  e.g. `views/_helpers.coffee` to ensure that objects that are extend are defined first at runtime. A cleaner way, is to use the "break out" folders with the configuration.
 
 *Here's an excerpt from the default [swell.json](https://github.com/cif/swell/blob/master/swell.json):*
       
@@ -110,6 +108,6 @@ When it comes time to deploy your application, it should first be packaged and m
 
     $ swell -p 
     
-By default, this will minifiy and concat your javascript, template, and ventor development targets into `public/production.js`. 
+This will minifiy and concatenate your javascript, template, and vendor development targets into `public/production.js`, or another file that can be specified in your configuration. 
 
 

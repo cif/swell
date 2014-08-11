@@ -24,5 +24,5 @@ class Examples extends swell.Collection
   # list will limit the fields retured to those specified
   # for larger stores this can drastically improve long list loading time
   # if no list is specified, everything in the model will be returned
-  list: ['_id','name','color','length','datetime']
+  list: ['_id','name','color','length','last_seen','active']
   # list: false  

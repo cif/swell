@@ -1,4 +1,4 @@
-// last compiled: 2014-07-23 11:07:96
+// last compiled: 2014-08-07 11:08:28
 
 var swell = {};
 var models = {};
@@ -33,7 +33,7 @@ swell.Collection = (function() {
     if (this.sort_by) {
       return +model.get(this.sort_by);
     } else {
-      return 1;
+      return 0;
     }
   };
 
@@ -238,6 +238,8 @@ swell.Helpers = (function() {
 
   function Helpers() {
     this.ajax = __bind(this.ajax, this);
+    this.falsey = __bind(this.falsey, this);
+    this.checkbox = __bind(this.checkbox, this);
     var _this = this;
     _.extend(dust.helpers, this);
     this.response_callback = {
@@ -258,8 +260,46 @@ swell.Helpers = (function() {
     return $(selector).html(loader);
   };
 
+  Helpers.prototype.render = function(selector, template, context, callback) {
+    return dust.render(template, context, function(err, out) {
+      $(selector).html(out);
+      if (callback) return callback();
+    });
+  };
+
+  Helpers.prototype.checkbox = function(chunk, context, bodies, params) {
+    var key, obj, out, val, _val;
+    out = '<input type="checkbox"';
+    obj = false;
+    for (key in params) {
+      val = params[key];
+      if (typeof val === 'object') obj = val;
+    }
+    for (key in params) {
+      val = params[key];
+      if (typeof val === 'string') {
+        _val = typeof obj[val] === 'undefined' ? val : obj[val];
+        out += ' ' + key + '="' + _val + '"';
+        if (key === 'name' && obj[val]) out += ' checked="' + _val + '"';
+      }
+    }
+    out += '/>';
+    return chunk.write(out);
+  };
+
+  Helpers.prototype.eq = function(chunk, context, bodies, params) {
+    if (typeof params.key === 'undefined' && !this.falsey(params.value)) {
+      return bodies.block(chunk, context);
+    } else if (typeof params.key !== 'undefined' && params.key === params.value) {
+      return bodies.block(chunk, context);
+    } else if (bodies["else"]) {
+      return bodies["else"](chunk, context);
+    } else {
+      return chunk.write('');
+    }
+  };
+
   Helpers.prototype.prop = function(chunk, context, bodies, params) {
-    console.log(params);
     if (!params.key || !params.obj || !params.obj[params.key]) {
       return chunk.write('');
     }
@@ -272,11 +312,14 @@ swell.Helpers = (function() {
     }
   };
 
-  Helpers.prototype.render = function(selector, template, context, callback) {
-    return dust.render(template, context, function(err, out) {
-      $(selector).html(out);
-      if (callback) return callback();
-    });
+  Helpers.prototype.falsey = function(val) {
+    var falsey;
+    falsey = false;
+    if (typeof val === 'boolean') falsey = !val;
+    if (typeof val === 'undefined') falsey = true;
+    if (typeof val === 'string' && val <= '') falsey = true;
+    if (typeof val === 'number' && val === 0) falsey = true;
+    return falsey;
   };
 
   Helpers.prototype.ajax = function(url, callback, options, method) {
@@ -302,10 +345,10 @@ swell.List = (function() {
   __extends(List, Backbone.View);
 
   function List() {
-    this.quicksort = __bind(this.quicksort, this);
     this.swap = __bind(this.swap, this);
     this.compare = __bind(this.compare, this);
     this.partition = __bind(this.partition, this);
+    this.quicksort = __bind(this.quicksort, this);
     this.sort = __bind(this.sort, this);
     this.sorted = __bind(this.sorted, this);
     this.render = __bind(this.render, this);
@@ -323,6 +366,7 @@ swell.List = (function() {
     _.extend(this, options);
     this.events = _.extend({}, this.__events, this.events);
     this.init.apply(this, arguments);
+    this.el_str = this.el;
     return this;
   };
 
@@ -331,9 +375,10 @@ swell.List = (function() {
   List.prototype.render = function(template, context, callback) {
     var _this = this;
     _.extend(context, this);
-    return helpers.render(this.el, template, context, function(err, res) {
+    this.setElement(this.el_str);
+    return helpers.render(this.el_str, template, context, function(err, res) {
       if (callback) callback(err, res);
-      return $(_this.el + ' ol').sortable({
+      return $(_this.el_str + ' ol').sortable({
         update: _this.sortable ? _this.sorted : void 0
       });
     });
@@ -345,36 +390,42 @@ swell.List = (function() {
       e.target = e.target.parentNode;
     }
     id = $(e.target).attr('id');
-    return this.trigger('clicked', id);
+    return this.trigger('clicked', id, e);
   };
 
   List.prototype.sorted = function(e) {
     var ordered;
     ordered = {};
-    $(this.el + ' ol li').each(function(index) {
+    $(this.el_str + ' ol li').each(function(index) {
       var id;
       id = $(this).attr('id');
       return ordered[id] = index;
     });
-    return this.trigger('sorted', ordered);
+    return this.trigger('sorted', ordered, e);
   };
 
   List.prototype.sort = function(e) {
-    var arrow, heading, index, items, table_root, tr, trs, _i, _j, _len, _len2, _results;
+    var arrow, clas, heading, index, items, table_root, tr, trs, _i, _j, _len, _len2;
     table_root = e.target;
     while (table_root.tagName !== 'TABLE') {
       table_root = table_root.parentNode;
     }
     index = $('tr th').index(e.target);
     heading = e.target;
-    this.sort_data_type = $(e.target).attr('data-type');
     if (!this.sorting_dir) this.sorting_dir = 1;
     if (heading === this.heading) this.sorting_dir *= -1;
+    this.sort_data_type = 'string';
+    if ($(e.target).hasClass('number')) this.sort_data_type = 'number';
+    if ($(e.target).attr('class').indexOf('date') >= 0) {
+      this.sort_data_type = 'date';
+    }
+    console.log(this.sort_data_type);
     this.heading = e.target;
-    $('tr th').css('font-weight', '300');
+    $('tr th').removeClass('sorted-up sorted-down');
     $('tr th span').remove();
     arrow = this.sorting_dir === -1 ? '<span>&uarr;&nbsp;</span>' : '<span>&darr;&nbsp;</span>';
-    $(e.target).css('font-weight', 'bold');
+    clas = this.sorting_dir === -1 ? 'sorted-up' : 'sorted-down';
+    $(e.target).addClass(clas);
     $(e.target).html(arrow + $(e.target).html());
     this.sort_index = index;
     trs = table_root.getElementsByTagName('tr');
@@ -389,12 +440,21 @@ swell.List = (function() {
       $(tr).remove();
     }
     this.quicksort(items, 0, items.length);
-    _results = [];
     for (_j = 0, _len2 = items.length; _j < _len2; _j++) {
       tr = items[_j];
-      _results.push($(table_root).append(tr));
+      $(table_root).append(tr);
     }
-    return _results;
+    return this.trigger('sorted:grid', this.heading, this.sorting_dir);
+  };
+
+  List.prototype.quicksort = function(items, begin, end) {
+    var pivot;
+    if ((end - 1) > begin) {
+      pivot = begin + Math.floor(Math.random() * (end - begin));
+      pivot = this.partition(items, begin, end, pivot);
+      this.quicksort(items, begin, pivot);
+      return this.quicksort(items, pivot + 1, end);
+    }
   };
 
   List.prototype.partition = function(items, begin, end, pivot) {
@@ -445,16 +505,6 @@ swell.List = (function() {
     array[a] = array[b];
     array[b] = tmp;
     return array;
-  };
-
-  List.prototype.quicksort = function(items, begin, end) {
-    var pivot;
-    if ((end - 1) > begin) {
-      pivot = begin + Math.floor(Math.random() * (end - begin));
-      pivot = this.partition(items, begin, end, pivot);
-      this.quicksort(items, begin, pivot);
-      return this.quicksort(items, pivot + 1, end);
-    }
   };
 
   return List;
@@ -639,39 +689,42 @@ models.Example = (function() {
   Example.prototype.fields = {
     name: {
       type: 'string',
-      label: 'Name',
+      label: 'Full Name',
       not_empty: true,
       not: 'bad',
-      message: 'Custom description validation message'
+      message: 'Custom description validation message',
+      sortable: true
     },
     color: {
       type: 'string',
       label: 'Color',
-      maxlength: 6
+      expr: /^#([0-9a-f]{3}|[0-9a-f]{6})$/,
+      message: 'Colors must be in hex format'
     },
     length: {
       type: 'number',
       label: 'Length (in.)',
-      round: 2
+      round: 2,
+      sortable: true
     },
-    sort_order: {
-      type: 'number',
-      expr: /^#([0-9a-f]{3}|[0-9a-f]{6})$/,
-      length: 2
-    },
-    datetime: {
+    last_seen: {
       label: 'Last Seen',
       type: 'datetime',
       past: false,
-      format: 'MMM Do YYYY h:ma'
+      format: 'MMM Do YYYY h:ma',
+      sortable: true
     },
     email: {
       type: 'email'
+    },
+    sort_order: {
+      type: 'number',
+      length: 2
     }
   };
 
   Example.prototype.defaults = {
-    name: 'This is fucking retarded',
+    name: 'Swell Example Model',
     color: 'cc0000'
   };
 
@@ -722,7 +775,7 @@ collections.Examples = (function() {
 
   Examples.prototype.sort_by = 'sort_order';
 
-  Examples.prototype.list = ['_id', 'name', 'color', 'length', 'datetime'];
+  Examples.prototype.list = ['_id', 'name', 'color', 'length', 'last_seen', 'active'];
 
   return Examples;
 
@@ -840,7 +893,7 @@ routers.Examples = (function() {
     return this.grid = new swell.List({
       el: '.grid',
       sortable: false,
-      columns: ['name', 'color', 'length', 'datetime'],
+      columns: ['name', 'color', 'length', 'last_seen'],
       fields: new models.Example().fields
     });
   };
@@ -872,6 +925,7 @@ routers.Examples = (function() {
   Examples.prototype.list = function(search) {
     var _this = this;
     return helpers.render('section[role=main]', 'examples.list', this.app, function() {
+      _this.delegate();
       helpers.loader('.simple,.grid');
       return examples.grab(function(err, models) {
         var display;
@@ -946,6 +1000,19 @@ views.examples.Form = (function() {
   }
 
   return Form;
+
+})();
+views.examples.List = (function() {
+
+  __extends(List, swell.List);
+
+  function List() {
+    List.__super__.constructor.apply(this, arguments);
+  }
+
+  List.prototype.el = '.simple';
+
+  return List;
 
 })();
 views.reports.ReportsChart = (function() {

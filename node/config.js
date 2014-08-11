@@ -1,7 +1,6 @@
 // config manager for swell. 
 // reads and writes values 
-// syntax:  --add <what e.g. resource> 
-//          --config <config.key> "<value>"
+// syntax:  --config <config.key> "<value>"
 //          --remove <config.key>
              
 // 2014-04-08

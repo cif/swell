@@ -14,13 +14,14 @@ class Examples extends swell.Router
     
     # scoping the collection to the window allows 
     # quick access to collections from other 
-    # routers / collections / models and YES, you WILL need them.
+    # routers / collections / models and ... 
+    # YES. you will want and need them.
     window.examples = new collections.Examples
     
-    # our list views are just a core object passed a few arguments.
-    # for more complex functionality, swell.List can be subclassed.
+    # our list views are examples of core function.
+    # for more complex lists and custom events, extend swell.List
     @list = new swell.List el: '.simple', sortable: true
-    @grid = new swell.List el: '.grid', sortable: false, columns: ['name','color','length','datetime'], fields: new models.Example().fields
+    @grid = new swell.List el: '.grid', sortable: false, columns: ['name','color','length','last_seen'], fields: new models.Example().fields
     
     
   # bind and unbind allow us to wire
@@ -50,6 +51,11 @@ class Examples extends swell.Router
     
   list: (search) =>
     helpers.render 'section[role=main]','examples.list', @app, =>
+      
+      # we have delegate here, because DOM nodes
+      # aren't rendered initially in our example
+      @delegate()
+      
       helpers.loader '.simple,.grid'
       examples.grab (err, models) =>
         display = if search then @collection.search(search, 'name') else models

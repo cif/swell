@@ -1,8 +1,6 @@
-# swell.List example
+# swell.List examples
 
-There aren't too many apps out there these days that don't have lists in one form or another. 
-
-Whether it's messages, contacts, orders or examples the **goal of swell.List is to ease common list interactions**. These include, searching, sorting (grids), reordering etc. Naturally, **swell.List broadcast events** when items are interacted with.
+There aren't too many apps out there these days that don't have lists in one form or another. The core list object faciliates common list interactions such as **searching, sorting (grids), reordering** and more. [swell.List](/page/api.client.list) broadcasts [events](/page/api.client.list#events) when items are interacted with.
 
 ### Examples
 *Here's a simple drag and drop list example of our object names and colors:*
@@ -12,7 +10,7 @@ Whether it's messages, contacts, orders or examples the **goal of swell.List is 
 *Here's an example of a simple heading-sortable grid:*
 <div class="grid"></div>
 <br>
-All the interactions in these two exampels are handled by the core swell.List object so the router code in the previous section required is minimal, but extensible. in Swell, nearly everything is **bound with events** as opposed to relying on function callbacks globals.
+The interactions in these two exampels are handled by the core [swell.List](/page/api.client.list) object so the router code in the previous section required is minimal, but extensible. in Swell, nearly everything is **bound with events** as opposed to relying on function callbacks globals.
 
 *Here's the code that renders both the sortable list and the grid:*
       
@@ -26,6 +24,19 @@ All the interactions in these two exampels are handled by the core swell.List ob
             @grid.render 'examples.list_grid', examples: display
       ...
 
-### Templating  Your Lists
+### Templating Lists
 
-Context to your [DustJS](https://github.com/linkedin/dustjs/wiki/Dust-Tutorial). There are a few ways in which
+These lists in the examples are rendered by passing a context to a template rendered with [DustJS](https://github.com/linkedin/dustjs/wiki/Dust-Tutorial). In our simple first case, that template is `client/dust/examples/list_simple.dust`
+
+Here's the dust that makes up our simple example with absolutely no frills:
+
+<pre><code>
+  &lt;ol class="swell-list sortable"&gt;
+    &lcub;#examples&rcub;
+      &lt;li id="&lcub;attributes._id&rcub;"&gt;&lt;span style="color:#&lcub;attributes.color&rcub;"&gt;&lcub;attributes.name&rcub;&lt;/span&gt;&lt;/li&gt;
+    &lcub;:else&rcub;
+      &lt;li class="empty"&gt;There aren't any examples!&lt;/li&gt;
+    &lcub;/examples&rcub;
+  &lt;/ol&gt;
+  
+</code></pre>  

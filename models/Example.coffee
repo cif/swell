@@ -7,40 +7,46 @@ class Example extends swell.Model
   
   idAttribute: '_id'    # validation will remove your keys if not specified
   
-  fields:
+  # see docs for all options, there are many.
+  # field definitions. 
+  fields:  
     name:
       type: 'string'
-      label: 'Name'
+      label: 'Full Name'
       not_empty: true
       not: 'bad'
       message: 'Custom description validation message'
-    
+      sortable: true
+      
     color:
       type: 'string'
       label: 'Color'
-      maxlength: 6
-    
+      expr: /^#([0-9a-f]{3}|[0-9a-f]{6})$/
+      message: 'Colors must be in hex format'
+      
     length:
       type: 'number'
       label: 'Length (in.)'
       round: 2
+      sortable: true
       
-    sort_order:
-      type: 'number'
-      expr: /^#([0-9a-f]{3}|[0-9a-f]{6})$/
-      length: 2
-    
-    datetime:
+    last_seen:
       label: 'Last Seen'
       type: 'datetime'
       past: false
       format: 'MMM Do YYYY h:ma'
+      sortable: true
     
     email: 
       type:'email'
+    
+    sort_order:
+      type: 'number'
+      length: 2
       
-      
+  
+  # defaults are in their own store for backbone
   defaults:
-    name: 'This is fucking retarded'
+    name: 'Swell Example Model'
     color: 'cc0000'
     

@@ -1,6 +1,6 @@
 # Examples
 
-The examples section aims to demonstrate live examples of each of the core client side classes as well provide sample code.  
+This section is in itself, a very simple single page app. It demonstrates examples of each of the core client-side objects and code snippets.  
 
 Notice how the hashtag changes while browing the example pages.  Essentially, **this section is a one page javascript web-app.** The text you are reading is rendered by simple render via the `home` route in `client/routers/examples.coffee`.  
 

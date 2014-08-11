@@ -1,10 +1,8 @@
 # Starting Out
 
-Getting up an running takes less than a minute if you have node and npm installed...
+It takes less than a minute if you already have node and npm installed
 
-### Get NodeJS and NPM
-If you don't have it already, the easiest way to get Node.js and npm is from their [downloads page](http://nodejs.org/download/). 
-<br>You can also use [brew](http://brew.sh/) or another package manager to do job if that's how you roll.
+**If you don't have node/npm already**, the easiest way to get it from the [downloads page](http://nodejs.org/download/) on nodejs.org.  You can use [brew](http://brew.sh/) or another package manager to do job if that's how you roll.
 
 ### Get Swell
 An easy one liner:

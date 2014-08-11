@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="/public/styles.css" />
 </head>
 <body class="swell examples">
-<aside>{>"partials/menu"/}</aside>
+<aside><div class="scroll">{>"partials/menu"/}</div></aside>
 <section role="main"></section>
 <script type="text/javascript" src="/socket.io/socket.io.js"> </script>
 {@if cond="config.watching"}

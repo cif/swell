@@ -13,7 +13,12 @@ var path   = require('path');
 var spec   = opts.file ? opts.file : 'swell.json';
 
 // create a new application
-if(opts.new){ }
+if(opts.new){ 
+  
+  require('./build').copy(opts.new);
+  process.exit(0);
+  
+}
 
 // read in the configuration file
 var config;
@@ -63,22 +68,14 @@ else if(opts.watch || opts.server){
   if(opts.watch){
     
     var watch  = require('./watch');
+    var client = config.client;
     
-    // client side coffeescript
-    if(config.client){  
-      var coffee = watch.instance(config.base, config.client).watch();
+    // run any objects in the client
+    for(var group in client){ 
+      if(typeof client[group] == 'object')
+        client[group].run = watch.instance(config.base, client[group]).watch();
     }
-    
-    // templates
-    if(config.templates){  
-      var templates = watch.instance(config.base, config.templates).watch();
-    }
-    
-    // styles
-    if(config.style){  
-      var style = watch.instance(config.base, config.style).watch();
-    }
-    
+   
     // core server class watcher
     if(opts.server){  
       var server = watch.instance(config.base, config.server.coffee).watch();
@@ -90,6 +87,7 @@ else if(opts.watch || opts.server){
     }
     
   }
+  
   
   if(opts.server){
     

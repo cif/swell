@@ -1,0 +1,25 @@
+@import 'func'
+
+highlight = rgba(0,0,0,0.06)
+shadow = rgba(0,0,0,0.1)
+focus = rgba(0,0,0,0.4)
+error = '#c00'
+valid = '#0c0'
+
+input[type=text], input[type=password], input[type=email], textarea
+  border-top 1px solid shadow
+  border-left 1px solid shadow
+  border-right 1px solid highlight
+  border-bottom 1px solid highlight
+  padding 5px
+  
+  
+input[type=text]:focus, input[type=password]:focus, input[type=email]:focus, textarea:focus
+  border 1px solid focus
+  outline none
+  
+input[type=text].error, input[type=password].error, input[type=email].error, textarea.error
+  border 1px solid error
+  
+input[type=text].validated, input[type=password].validated, input[type=email].validated, textarea.validated
+  border 1px solid valid    

@@ -1,4 +1,4 @@
-// last compiled: 2014-07-23 12:07:35
+// last compiled: 2014-08-07 11:08:63
 
 var swell = {};
 var models = {};
@@ -971,39 +971,42 @@ models.Example = (function() {
   Example.prototype.fields = {
     name: {
       type: 'string',
-      label: 'Name',
+      label: 'Full Name',
       not_empty: true,
       not: 'bad',
-      message: 'Custom description validation message'
+      message: 'Custom description validation message',
+      sortable: true
     },
     color: {
       type: 'string',
       label: 'Color',
-      maxlength: 6
+      expr: /^#([0-9a-f]{3}|[0-9a-f]{6})$/,
+      message: 'Colors must be in hex format'
     },
     length: {
       type: 'number',
       label: 'Length (in.)',
-      round: 2
+      round: 2,
+      sortable: true
     },
-    sort_order: {
-      type: 'number',
-      expr: /^#([0-9a-f]{3}|[0-9a-f]{6})$/,
-      length: 2
-    },
-    datetime: {
+    last_seen: {
       label: 'Last Seen',
       type: 'datetime',
       past: false,
-      format: 'MMM Do YYYY h:ma'
+      format: 'MMM Do YYYY h:ma',
+      sortable: true
     },
     email: {
       type: 'email'
+    },
+    sort_order: {
+      type: 'number',
+      length: 2
     }
   };
 
   Example.prototype.defaults = {
-    name: 'This is fucking retarded',
+    name: 'Swell Example Model',
     color: 'cc0000'
   };
 
@@ -1054,7 +1057,7 @@ collections.Examples = (function() {
 
   Examples.prototype.sort_by = 'sort_order';
 
-  Examples.prototype.list = ['_id', 'name', 'color', 'length', 'datetime'];
+  Examples.prototype.list = ['_id', 'name', 'color', 'length', 'last_seen', 'active'];
 
   return Examples;
 

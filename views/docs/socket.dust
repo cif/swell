@@ -2,12 +2,12 @@
 
 ## Keeping it in sync
 
-It's fast becoming a requirement that a web-based app will at least to some extent keep multiple connected clients in sync.  Several frameworks have done this well, but therein lies the problem &mdash; They *are* frameworks. <br>Instead of enforcing any given pattern **Swell starts with a bare-bones-default**, some cool optional features and lets you take it from there.
+It's fast becoming a requirement that a web-based app will at least to some extent keep multiple connected clients in sync.  Several frameworks have done this well, but therein lies the problem &mdash; They *are* frameworks. <br>Instead of enforcing a pattern **Swell starts with a bare-bones-default** adds some cool optional features and lets you take it from there.
 
-### Handle REST and broadcast... at the same time
+### Handle REST and broadcast... at the same time!
 Thanks to node and express, it's easy to send events to connected clients when things happen on the server. This **eliminates the need to send emit events from the client** in addition to your REST requests. Obviously, if you want to build in a chat window or public drawing board, it will make sense to do so and you can handle those events in `server/socket.js`'s setup() method.
 
-You might ask, **Why not forward socket emit events for persistence** from `io.on('connection', function(){ .. });`?  The short answer is: **What if that isn't what we want?**. Swell is designed so that if you are building a simple CMS, a weather API or a photo album; you can choose the features that best suit your needs.
+You might ask, **Why not forward socket emit events for persistence** from `io.on('connection', function(){ .. });`?  The short answer is: **What if that isn't what we want?**. Swell is designed so that if you are building a simple CMS, a weather API or a photo album; you can choose the approach and the features that best suit your needs.
 
 *Here's a responder method example of how we might send a `user:status` event to connected clients:*
     
@@ -24,7 +24,7 @@ You might ask, **Why not forward socket emit events for persistence** from `io.o
 
 ### One line setup with swell.Collection and swell.Responder
 
-Regardless of your storage choices, collections will make up the core of your app and keeping those collections in sync real-time **eliminate any potential for the classic multi-user overwriting issues when editing documents simultaneously.** This problem can extend to new documents as well. Here at [Flybook](https://www.theflybook.com), an up-to-date collection of reservations is critically important to ensuring that a new reservation record's time and date is truly available. 
+Regardless of your storage choices, collections will make up the core of your app and keeping those collections in sync real-time **eliminates potential for the classic overwriting issue** caused when users edit documents simultaneously. This problem can extend to new documents as well. For example, here at [Flybook](https://www.theflybook.com) an up-to-date collection of reservations is critically important to ensuring that a new reservation record's time and date is really available. 
 
 If you were paying close attention to the [server collections](/page/server#collections) section, you may have noticed the `synchronize: true` property being set in our example.  With that single line on your collection and `expose_rest: true` set on a linked Responder object the following default behaviors will take place:
 

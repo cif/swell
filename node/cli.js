@@ -19,7 +19,7 @@ exports.nom = nom()
        .option('server', {
           abbr: 's',
           flag: true,
-          help: "spin up an express server on the port speficied in your configuration\n"
+          help: "spin up an express server on the port speficied by configuration file\n"
        })
        .option('file', {
           abbr: 'f',
@@ -38,11 +38,6 @@ exports.nom = nom()
           abbr: 'd',
           help: "remove a <key> from json configuration. (use quotes)\n"
        })
-       /*.option('add', {
-          abbr: 'a',
-          choices:['resource','route'],
-          help: "shortcut to resouces <name> <engine[mongo|mysql|api],host,user_or_key,password_or_secret> routes <path> <responder.method>.\n"
-       })*/
        .nocolors().nom();
        
            

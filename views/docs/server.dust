@@ -62,9 +62,11 @@ There are two ways in which requests are routed to a responder object method (lo
 
 ### Responders
 
-The router module will map and call methods on your responder objects. The methods take two arguments, `req` and `callback`. The **req argument is the standard express req argument you would get specifiying an express route**. Router.js will also parse additional query string and multipart / form-data and pass as `req.data`. 
+Responder methods take two arguments, `req` and `callback`. `req` is the same express req argument you would get specifiying an express route. Router.js will **automatically parse additional query string and multipart / form-data** which is stored in `req.data`. 
 
-The second argument is a callback: `callback(err, data)` which is passed back to the router then on to to `server/render.js` (and `server/socket.js` if data.emit is specified for final output.  Often, the standard callback pattern `(err, result)` makes it possible to pass the callback argument to directly to the functions which fetch data or perform operations.
+The second argument is a callback: `callback(err, data)` which is passed back to the router then on to to `server/render.js` (and `server/socket.js` if data.emit is specified for final output.  
+
+The standard callback pattern `(err, result)` often makes it possible and (faster!) to **pass the callback argument to directly to the functions that fetch data** or perform operations.
 
 *An excerpt from a responder "Examples" (in coffeescript):*
 
@@ -78,25 +80,30 @@ The second argument is a callback: `callback(err, data)` which is passed back to
       
       # exposes the core get, post, put, delete methods
       expose_rest: true
-  
+      
+      # for use of uri_params, no route required
       color: (req, callback) =>
         @collection.query color: req.uri_params[0], callback 
           
-      shapes: (req, callback) =>
-        @collection.query is_shape: true, callback   
-      
-      # this takes id because it is specified in routes config    
-      edit: (req, id, callback) =>  
+      # params.id is present because the route is specified in config    
+      edit: (req, callback) =>  
         @collection.get req.params.id, (err, example) =>
           return callback(err) if err
           res =
             example: example
             view: 'examples/edit'
           callback null, res  
-                              
+      
+      # query for shapes
+      shapes: (req, callback) =>
+        @collection.query is_shape: '1', callback   
+      
+      
       ...    
 
-In this example, a GET request to */examples/color/red* would return a JSON array of examples matching color:'red'. Additional methods defined will map automatically to your URI patterns.  Responder classes, in addition to models and collections are compiled into **server/swell.js**. When watching, changes will be reflected in each request made to the server. 
+In this example, a GET request to */examples/color/red* would return a JSON array of examples matching color:'red'. Additional methods defined will map automatically to your URI patterns.  
+
+Responder classes are compiled into **server/swell.js**. When watching, changes will be reflected in each request made to the server. 
 
 ### Collections
 
@@ -120,14 +127,15 @@ It's common these days for applications to use many data sources. For that reaso
 
 ### Models
 
-Models are objects which define field keys and data types to be persisted on the server. Both the client and server share a common core validate(*attrs*) method (taken from <a href="http://backbonejs.org/#Model-validate">BackboneJS</a>) which validates and sanitizes data within your app. As with collecitons, your implementations are **shared by the client**, so be careful not to override [Backbone.Model](http://backbonejs.org/#Model) core functionality.
+The basic model object is **essentially a set of rules, or a filter which objects will pass through** to persisted on the server. Swell core's `sanitize(obj)` method (similar to <a href="http://backbonejs.org/#Model-validate">BackboneJS</a>) which validates and sanitizes data within your app. You may define validate for further validation as needed.  Models are very often a **convenient place to define business logic methods** related to the data the object it stores. As with collecitons, your implementations are **shared by the client**, so be careful not to override [Backbone.Model](http://backbonejs.org/#Model) core functionality.
 
 *A simple "Example" model (written in coffeescript):*
 
     class Example extends swell.Model
       
       idAttribute: '_id'
-  
+      strict: true
+      
       fields:
         name:
           type: 'string'
@@ -141,9 +149,10 @@ Models are objects which define field keys and data types to be persisted on the
           message: 'Colors must be hex values'
     
 
+
 ### REST
 
-swell.Responder defines `get`,`post`,`put`, and `delete` methods which may be called when the `expose_rest` property is set to true. For security reasons, it is set to false by default. This allows you to create responder objects with three lines of code that will handle CRUD operations as per [BackboneJS](http://backbonejs.org) specifications.
+swell.Responder defines `get`,`post`,`put`, and `delete` methods which may be called when the `expose_rest` property is set to true. For security reasons, it is set to false by default. This allows you to create responder objects with three lines of code that will handle server side CRUD operations as per [BackboneJS](http://backbonejs.org) specifications.
 
 
 ### Data
