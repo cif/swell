@@ -14,7 +14,7 @@ Swell applications always expose the core [server](/page/server) modules giving 
 
 ### Not Isomorphic
 
-[Isomorphic](http://isomorphic.net/) app runs the same code on both the client and the server. This is **not the case with Swell.**  Models and collections are **defined in one place** and extend what appears to be the same class however, when compiled they **extend two different objects** each of which is intened for the client or server &mdash; but not both! 
+[Isomorphic](http://isomorphic.net/) apps run the same code on both the client and the server. This is **not the case with Swell.**  Models and collections are **defined in one place** and extend what appears to be the same class however, when compiled they **extend two different objects** each of which is intened for the client or server &mdash; but not both! 
  
 <br>
 
