@@ -38,34 +38,46 @@ class Responder
   get: (req, callback) =>
     return callback(null, unauthorized:true) if !@expose_rest
     return callback('[swell] A collection must specified to use REST features') if !@collection
-    if req.data.id
-      @collection.get req.data.id, callback
+    if req.body.id
+      @collection.get req.body.id, callback
     else  
       @collection.fetch callback
       
   post: (req, callback) =>
     return callback(null, unauthorized:true) if !@expose_rest
     return callback('[swell] A collection must specified to use REST features') if !@collection
-    @collection.add req.data, (err, res) =>
+    @collection.add req.body, (err, res) =>
       return callback err if err
       data = 
-        type: 'sort'
+        type: 'add'
         res: [res]
         emit:
           event: @collection.store
           space: @config.server.socket_io.namespace
-        
       callback null, data
     
   put: (req, callback) =>
     return callback(null, unauthorized:true) if !@expose_rest
     return callback('[swell] A collection must specified to use REST features') if !@collection
-    @collection.update req.data, callback
+    @collection.update req.body, callback
     
   delete: (req, callback) =>
     return callback(null, unauthorized:true) if !@expose_rest
     return callback('[swell] A collection must specified to use REST features') if !@collection
-    @collection.remove req.data, callback
+    @collection.remove req.body, callback
+  
+  # cookie serves as a getter / setter 
+  # and destroyer of signed cookies
+  cookie: (name, value, options={}) =>
+    if typeof value is 'undefined'
+      return if @__cookies[name] then @__cookies[name] else false
+    if value is -1
+      return @res.clearCookie(name)
+    else
+      options.signed = true if !options.signed
+      return @res.cookie(name, value, options)
+    return false
+  
   
   # sort handles requests for sort order 
   # updates from swell.List instances
@@ -73,13 +85,13 @@ class Responder
     # make sure we have a model and key
     return callback('[swell] sort was called on a responder that does not have a collection, store, or model or the model is missing a key: attribute') if !@collection.model or !@collection.model.key
     results = []
-    for key, obj of req.data.sorted
+    for key, obj of req.body.sorted
       update = {}
       update[@collection.model.key] = key
       sort = if @collection.sort_by then @collection.sort_by else 'sort_order' # the default key for sorting is sort_order
       update[sort] = obj
       results.push update
-        
+      
       @collection.update(update, false)
   
     # because this could be a lot of query operations, 

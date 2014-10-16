@@ -5,25 +5,24 @@ class Examples extends swell.Router
   routes:
     'home' : 'home'
     'router' : 'router'
-    'list/search/:query' : 'list'
     'list' : 'list'
+    'list/search/:query' : 'search'
     'form' : 'form'
-    'edit/:id' : 'edit'
+    'edit/:id' : 'form'
   
   init: (@app) =>
     
     # scoping the collection to the window allows 
     # quick access to collections from other 
     # routers / collections / models and ... 
-    # YES. you will want and need them.
+    # YES you will want and need them.
     window.examples = new collections.Examples
     
-    # our list views are examples of core function.
-    # for more complex lists and custom events, extend swell.List
+    # our list views are examples of simple drag and heading sort functionality.
     @list = new swell.List el: '.simple', sortable: true
-    @grid = new swell.List el: '.grid', sortable: false, columns: ['name','color','length','last_seen'], fields: new models.Example().fields
+    @grid = new swell.List el: '.grid', sortable: false, columns: ['name','color','length','price','last_seen'], fields: new models.Example().fields
     
-    
+  
   # bind and unbind allow us to wire
   # collections to our views and release
   # events when they aren't needed
@@ -36,7 +35,7 @@ class Examples extends swell.Router
     # but, call update() on the grid in case it is user sorted
     examples.on 'updated', (res) =>
       @list.render 'examples.list_simple', examples: examples.models
-      @grid.update
+      @grid.update()
     
   unbind: =>
     @list.off 'sorted'
@@ -45,22 +44,36 @@ class Examples extends swell.Router
   # home and router are simple renders (no events)
   home: =>
     helpers.render 'section[role=main]', 'examples.home', @app
-  
-  router: =>
-    helpers.render 'section[role=main]', 'examples.router', @app
     
-  list: (search) =>
+  router: =>
+    helpers.render 'section[role=main]', 'examples.router', @app, ->
+      # highlights code examples
+      $('pre code').each (i, block) ->
+        hljs.highlightBlock(block)
+    
+  list: =>
     helpers.render 'section[role=main]','examples.list', @app, =>
       
-      # we have delegate here, because DOM nodes
+      # we have to delegate here, because DOM nodes
       # aren't rendered initially in our example
       @delegate()
       
       helpers.loader '.simple,.grid'
       examples.grab (err, models) =>
-        display = if search then @collection.search(search, 'name') else models
-        @list.render 'examples.list_simple', examples: display
-        @grid.render 'examples.list_grid', examples: display
+        @list.render 'examples.list_simple', examples: models
+        @grid.render 'examples.list_grid', examples: models
+        
+        # highlights code examples
+        $('pre code').each (i, block) ->
+          hljs.highlightBlock(block)
    
+  form: (id) =>
+    helpers.render 'section[role=main]','examples.form', @app, =>
+    
+      # we have delegate here, because DOM nodes
+      # aren't rendered initially in our example
+      @delegate()
+    
+      
    
   

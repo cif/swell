@@ -1,4 +1,4 @@
-// last compiled: 2014-08-07 11:08:63
+// last compiled: 2014-10-15 10:10:32
 
 var swell = {};
 var models = {};
@@ -818,6 +818,7 @@ swell.Responder = (function() {
   function Responder(config) {
     this.config = config;
     this.sort = __bind(this.sort, this);
+    this.cookie = __bind(this.cookie, this);
     this["delete"] = __bind(this["delete"], this);
     this.put = __bind(this.put, this);
     this.post = __bind(this.post, this);
@@ -853,8 +854,8 @@ swell.Responder = (function() {
     if (!this.collection) {
       return callback('[swell] A collection must specified to use REST features');
     }
-    if (req.data.id) {
-      return this.collection.get(req.data.id, callback);
+    if (req.body.id) {
+      return this.collection.get(req.body.id, callback);
     } else {
       return this.collection.fetch(callback);
     }
@@ -870,11 +871,11 @@ swell.Responder = (function() {
     if (!this.collection) {
       return callback('[swell] A collection must specified to use REST features');
     }
-    return this.collection.add(req.data, function(err, res) {
+    return this.collection.add(req.body, function(err, res) {
       var data;
       if (err) return callback(err);
       data = {
-        type: 'sort',
+        type: 'add',
         res: [res],
         emit: {
           event: _this.collection.store,
@@ -894,7 +895,7 @@ swell.Responder = (function() {
     if (!this.collection) {
       return callback('[swell] A collection must specified to use REST features');
     }
-    return this.collection.update(req.data, callback);
+    return this.collection.update(req.body, callback);
   };
 
   Responder.prototype["delete"] = function(req, callback) {
@@ -906,7 +907,25 @@ swell.Responder = (function() {
     if (!this.collection) {
       return callback('[swell] A collection must specified to use REST features');
     }
-    return this.collection.remove(req.data, callback);
+    return this.collection.remove(req.body, callback);
+  };
+
+  Responder.prototype.cookie = function(name, value, options) {
+    if (options == null) options = {};
+    if (typeof value === 'undefined') {
+      if (this.__cookies[name]) {
+        return this.__cookies[name];
+      } else {
+        return false;
+      }
+    }
+    if (value === -1) {
+      return this.res.clearCookie(name);
+    } else {
+      if (!options.signed) options.signed = true;
+      return this.res.cookie(name, value, options);
+    }
+    return false;
   };
 
   Responder.prototype.sort = function(req, callback) {
@@ -915,7 +934,7 @@ swell.Responder = (function() {
       return callback('[swell] sort was called on a responder that does not have a collection, store, or model or the model is missing a key: attribute');
     }
     results = [];
-    _ref = req.data.sorted;
+    _ref = req.body.sorted;
     for (key in _ref) {
       obj = _ref[key];
       update = {};
@@ -939,25 +958,6 @@ swell.Responder = (function() {
   return Responder;
 
 })();
-models.Book = (function() {
-
-  __extends(Book, swell.Model);
-
-  function Book() {
-    Book.__super__.constructor.apply(this, arguments);
-  }
-
-  Book.prototype.has_many = [collections.Chapters];
-
-  Book.prototype.fields = {
-    title: {
-      type: 'string'
-    }
-  };
-
-  return Book;
-
-})();
 models.Example = (function() {
 
   __extends(Example, swell.Model);
@@ -972,10 +972,10 @@ models.Example = (function() {
     name: {
       type: 'string',
       label: 'Full Name',
+      sortable: true,
       not_empty: true,
       not: 'bad',
-      message: 'Custom description validation message',
-      sortable: true
+      message: 'Custom description validation message'
     },
     color: {
       type: 'string',
@@ -991,10 +991,15 @@ models.Example = (function() {
     },
     last_seen: {
       label: 'Last Seen',
-      type: 'datetime',
+      type: 'date',
       past: false,
-      format: 'MMM Do YYYY h:ma',
       sortable: true
+    },
+    price: {
+      label: 'MSRP',
+      type: 'currency',
+      sortable: true,
+      format: '$,'
     },
     email: {
       type: 'email'
@@ -1007,7 +1012,8 @@ models.Example = (function() {
 
   Example.prototype.defaults = {
     name: 'Swell Example Model',
-    color: 'cc0000'
+    color: 'cc0000',
+    length: '12'
   };
 
   return Example;
@@ -1057,7 +1063,7 @@ collections.Examples = (function() {
 
   Examples.prototype.sort_by = 'sort_order';
 
-  Examples.prototype.list = ['_id', 'name', 'color', 'length', 'last_seen', 'active'];
+  Examples.prototype.list = ['_id', 'name', 'color', 'length', 'price', 'last_seen', 'active'];
 
   return Examples;
 
@@ -1098,13 +1104,17 @@ collections.Users = (function() {
 
 })();
 responders.Examples = (function() {
+  var moment;
 
   __extends(Examples, swell.Responder);
 
   function Examples() {
+    this.cookies = __bind(this.cookies, this);
     this.app = __bind(this.app, this);
     Examples.__super__.constructor.apply(this, arguments);
   }
+
+  moment = require('moment');
 
   Examples.prototype.collection = collections.Examples;
 
@@ -1115,6 +1125,17 @@ responders.Examples = (function() {
       view: 'index',
       layout: 'layouts/app'
     });
+  };
+
+  Examples.prototype.cookies = function(req, callback) {
+    var expire;
+    expire = moment().add('days', 30).diff(moment(), 'seconds');
+    this.cookie('remember', 'the meaning of life', {
+      maxAge: expire
+    });
+    console.log(this.cookie('remember'));
+    this.cookie('destroy', -1);
+    return callback(null, 'This is a cookie test method response.');
   };
 
   return Examples;
@@ -1154,71 +1175,6 @@ responders.Pages = (function() {
   };
 
   return Pages;
-
-})();
-responders.Statements = (function() {
-  var async, fs;
-
-  __extends(Statements, swell.Responder);
-
-  function Statements() {
-    this.annual = __bind(this.annual, this);
-    Statements.__super__.constructor.apply(this, arguments);
-  }
-
-  fs = require('fs');
-
-  async = require('async');
-
-  Statements.prototype.expose_rest = true;
-
-  Statements.prototype.collection = collections.Statements;
-
-  Statements.prototype.annual = function(req, callback) {
-    var _this = this;
-    return new this.collection(this.config, function(err, collection) {
-      var queries;
-      _this.collection = collection;
-      if (err) return callback(err);
-      queries = ["select YEAR(start_date) as year, MONTH(start_date) as month, sum(adults), sum(adults*1.46) as res_fees from reservations where start_date >= DATE_FORMAT(NOW() ,'%Y-01-01') and account_id in(select id from accounts where is_billable=1) and status=1 and (trip_id > '' or lodge_id > '') GROUP BY YEAR(start_date), MONTH(start_date)", "SELECT YEAR(date) as year, MONTHNAME(date) as month, SUM(total) as total, SUM(reservation_fees) as res_fees, SUM(service_fees) as serv_fees FROM statements GROUP BY YEAR(date), MONTH(date)"];
-      return async.map(queries, _this.collection.db.query, function(err, res) {
-        var data;
-        if (err) return callback(err);
-        data = {
-          projected: res[0],
-          billed: res[1]
-        };
-        return callback(null, data);
-      });
-    });
-  };
-
-  return Statements;
-
-})();
-responders.Users = (function() {
-
-  __extends(Users, swell.Responder);
-
-  function Users() {
-    this.authenticate = __bind(this.authenticate, this);
-    this.before = __bind(this.before, this);
-    Users.__super__.constructor.apply(this, arguments);
-  }
-
-  Users.prototype.collection = collections.Users;
-
-  Users.prototype.expose_rest = true;
-
-  Users.prototype.before = function(req) {
-    return true;
-  };
-
-  Users.prototype.authenticate = function(req, callback) {
-    return callback('This is a custom error!');
-  };
-
-  return Users;
 
 })();
 exports.swell = swell;

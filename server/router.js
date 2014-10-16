@@ -10,15 +10,11 @@
   
  var app, service, config, socket
  var controllers = {};
- var render = require('./render'); 
- 
- // this is used in place of express' 
- // soon to be deprecated bodyParser() middleware
- var formidable = require('formidable'); 
+ var render = require('./render');
  
  var setup = function(_app, _socket, _config){
   
-   app = _app;
+   app    = _app;
    socket = _socket;
    config = _config;
    
@@ -43,7 +39,7 @@
    for(route in config.server.routes){
 
      // replace the string arguments with wildcards for matching the method we are trying to call.
-     // TODO: should support splats, but routing isn't that common these days, naming conventions work fine.
+     // TODO: support splats. routing isn't that common these days, naming conventions work fine.
      regex_string = '^' + route.replace(/\:(.*)/g,'(.*)') + '$'
      wild = new RegExp(regex_string);
      if(url.match(wild)){
@@ -86,74 +82,53 @@
      
      if(controllers[responder][method] || (call_by_type && controllers[responder][call_by_type])){
        
-       // parse any incoming form data
-       var form = new formidable.IncomingForm();
-       var uri_args;
+       // parse any additional uri beyond responder/method
+       var uri_args = req.url.split('/');  
+           uri_args.shift();
+           uri_args.shift();
+      
+       // assign to the request object     
+       req.uri_params = uri_args;
+       
+       // expose res behind the scenes, shortcut cookies
+       controllers[responder].res = res;
+       controllers[responder].__cookies = req.signedCookies;
+       
+       // default to type GET, PUT, POST, DELETE etc.
+       if(!controllers[responder][method]){ 
+         method = call_by_type.toLowerCase();  
+       }
+       
+       // call before on the reponder, send back denied if false
+       if(!controllers[responder].before(req)){
+         render.out(null, {denied: true}, null, res);
+         controllers[responder].after();
+       }
      
-       form.parse(req, function(err, fields, files) {
+       // finally, get ready to call the method
+       var method_args = [req, function(err, data){
          
-         if(err) render.out(new Error('[swell-router] failed to parse request body: ' + err.getMessage()), false, false, res);
+         // rendering engine requires data is an object
+         var data = data || {};
          
-         // get parsed data
-         req.data = {}
-         for(key in fields){
-           req.data[key] = fields[key];
+         // render it
+         render.out(err, data, res);
+         
+         // see if there is any data to emit through sockets
+         if(data.emit){
+    
+           if(!data.emit.space) data.emit.space = '/';
+           socket.emit(req, data.emit.space, data.emit.event, data);
+    
          }
          
-         // get parsed data
-         req.data.files = {}
-         for(key in files){
-           req.data.files[key] = files[key];
-         }
+         // call after() when render has completed
+         controllers[responder].after(err, res);
          
-         // extend query parameters but dont override post data
-         for(obj in req.query){
-           if(!req.data.hasOwnProperty(obj)){
-             req.data[obj] = req.query[obj];
-           }
-         }
-         
-         // default to type GET, PUT, POST, DELETE etc.
-         if(!controllers[responder][method]){ 
-           method = call_by_type.toLowerCase();  
-         }
-         
-         // call before on the reponder
-         if(!controllers[responder].before(req)){
-           render.out(null, {unauthorized: true}, null, res);
-           controllers[responder].after();
-         }
+       }];
        
-         // send any uri pased arguments as data.uri_params
-         uri_args = req.url.split('/');  
-         uri_args.shift();
-         uri_args.shift();
-         req.uri_params = uri_args;
-         
-         var method_args = [req, function(err, data){
-           
-           // rendering engine requires data is an object
-           var data = data || {};
-           
-           // render it
-           render.out(err, data, res);
-           
-           // see if there is any data to emit through sockets
-           if(data.emit){
-      
-             if(!data.emit.space) data.emit.space = '/';
-             socket.emit(req, data.emit.space, data.emit.event, data);
-      
-           }
-           // call after() when render has completed
-           controllers[responder].after(err, res);
-           
-         }];
-         
-         // call the controller method
-         controllers[responder][method].apply(null, method_args);
-       
-       });
+       // call the controller method
+       controllers[responder][method].apply(null, method_args);
        
        
      } else {

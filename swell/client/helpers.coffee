@@ -35,7 +35,10 @@ class Helpers
     dust.render template, context, (err, out) ->
       $(selector).html out  
       callback() if callback
-      
+  
+  # changes the default timeout argument order for cleaner coffeescripting
+  delay: (time, callback) ->
+    window.setTimeout callback, time
       
   # ------------------------- form elements ---------------------------------
   checkbox: (chunk, context, bodies, params) =>
@@ -48,7 +51,7 @@ class Helpers
         _val = if typeof obj[val] is 'undefined' then val else obj[val]
         out += ' ' + key + '="'+_val+'"'
         out += ' checked="'+_val+'"' if key is 'name' and obj[val]
-    out += '/>'  
+    out += '/>'
     chunk.write out
   
   
@@ -68,8 +71,29 @@ class Helpers
       bodies.else(chunk, context)
     else
       chunk.write ''
+
+  # auto-formatting based on model attributes, dates, currency etc.
+  format: (chunk, context, bodies, params) ->
+    out = params.obj[params.key].toString()
+    # currency
+    if params.field.type is 'currency' and params.field.format > ''
+      out = params.field.format.substr(0,1) + out.replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1" + params.field.format.substr(1,1))
+      dec = out.substr(out.lastIndexOf('.'), out.length)
+      out += '.00' if dec.indexOf('.') is -1
+      out += '0' if dec.length is 2
+    
+    # numbers 3 digit delimiter if present
+    if params.field.type is 'number' and params.field.format > ''
+      out = out.replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1" + params.field.format)
+    
+    # dates - requires moment library
+    if params.field.type is 'date' and params.field.format > ''
+      out = moment(out).format(params.field.format)
+        
+    chunk.write out
+    
       
-  # allows easier to model field properties
+  # allows easier access to model field properties
   prop: (chunk, context, bodies, params) ->
     return chunk.write '' if !params.key or !params.obj or !params.obj[params.key]
     if params.obj[params.key][params.field]

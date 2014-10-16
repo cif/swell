@@ -17,10 +17,13 @@ class Application extends Backbone.Router
     
     # initialize application routers
     @examples = new routers.Examples @
-    @reports  = new routers.Reports @
     
     # start the party
     Backbone.history.start()
+    
+    # this highlights code examples, remove it
+    $('pre code').each (i, block) ->
+      hljs.highlightBlock(block)
     
     # return the app instance
     console.info '[swell] ' + moment().format('HH:mm:ss') + ' app instantiated as window.app '

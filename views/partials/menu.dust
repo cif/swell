@@ -27,6 +27,7 @@
 *    <a href="/examples/app/#home" {@eq key="layouts/app" value=layout}class="selected"{/eq}>Examples</a>
     *    <a href="#router">Router</a>
     *    <a href="#list">List</a>
+    *    <a href="#form">Form</a>
 
 
 #### SERVER API
@@ -43,5 +44,7 @@
 *    <a href="/page/form" {@eq key="docs/form" value=view}class="selected"{/eq}>swell.Form</a>
 *    <a href="/page/list" {@eq key="docs/api/client/list" value=view}class="selected"{/eq}>swell.List</a>
 *    <a href="/page/helpers" {@eq key="docs/helpers" value=view}class="selected"{/eq}>swell.Helpers</a>
+*    <a href="/page/helpers" {@eq key="docs/helpers" value=view}class="selected"{/eq}>swell.Synchro</a>
 
 
+<br>

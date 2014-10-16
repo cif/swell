@@ -26,11 +26,8 @@
     
   };
   
-  // simple emits from the router and responder
+  // simple emit from the router and responder
   var emit = function(req, space, event, data){
-    
-    // set the socket id so we can ignore on the client if we have to
-    console.log(data);
     
     // emit the event
     socket.of(space).emit(event, data);

@@ -54,7 +54,7 @@ class Collection extends Backbone.Collection
   #  no need to define success: and error: each call
   
   # grab is basically a shortcut to @models
-  # but will fetch if models has zero length
+  # but will fetch if models[] is zero length
   grab: (callback) =>
     if @models.length is 0
       @pull (err, res) =>
@@ -80,18 +80,28 @@ class Collection extends Backbone.Collection
   # sorted is typically called from sorted events
   # fired by list views, takes {id:sort} pairs
   sorted: (ordered) =>
-    
     # update the server via ajax helper method
     # the broadcast will reach here too, calling twice seems reduntant ?
     handler = (err, res) ->
-      console.error '[swell] ' + moment('HH:mm:ss') + ' error sorting a collection: ' + err.responseText if err
+      console.error '[swell] ' + moment().format('HH:mm:ss') + ' error sorting a collection: ' + err.responseText if err
     helpers.ajax @url + 'sort', handler, data: JSON.stringify(sorted: ordered), 'POST'
   
   
-  
+  # default search method will search models for attributes 
+  # matching string or array second argument
+  search: (query, fields, case_sensitive) =>
+    console.log query, fields  
+    results = []
+    for model in @models
+      if typeof fields is 'array'
+        console.log 'fancy!'
+      else
+        search = model.get(fields).toString()
+        search = search.toLowerCase() if !case_sensitive
+        search = query.toLowerCase() if !case_sensitive
+        results.push model if search.indexOf(query) > -1
     
-
-
+    return results      
     
     
   

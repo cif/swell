@@ -1,6 +1,8 @@
 # swell.List examples
 
-There aren't too many apps out there these days that don't have lists in one form or another. The core list object faciliates common list interactions such as **searching, sorting (grids), reordering** and more. [swell.List](/page/api.client.list) broadcasts [events](/page/api.client.list#events) when items are interacted with.
+There aren't too many apps out there these days that don't have lists in one form or another. The core list object faciliates simple **click handling, drag 'n' drop reordering and sortable grid headings**.
+
+There are several default [events](/page/api.client.list#events) which [swell.List](/page/api.client.list) will broadcast when lists are interacted with.
 
 ### Examples
 *Here's a simple drag and drop list example of our object names and colors:*
@@ -10,18 +12,17 @@ There aren't too many apps out there these days that don't have lists in one for
 *Here's an example of a simple heading-sortable grid:*
 <div class="grid"></div>
 <br>
-The interactions in these two exampels are handled by the core [swell.List](/page/api.client.list) object so the router code in the previous section required is minimal, but extensible. in Swell, nearly everything is **bound with events** as opposed to relying on function callbacks globals.
+The interactions in these two exampels are handled by the core [swell.List](/page/api.client.list) object so the router code in the previous section required is minimal but extensible. In Swell, nearly everything is **bound with events** as opposed to relying on function callbacks.
 
 *Here's the code that renders both the sortable list and the grid:*
       
       ...
-      list: (search) =>
+      list: =>
         helpers.render 'section[role=main]','examples.list', @app, =>
           helpers.loader '.simple,.grid'
           examples.grab (err, models) =>
-            display = if search then @collection.search(search, 'name') else models
-            @list.render 'examples.list_simple', examples: display
-            @grid.render 'examples.list_grid', examples: display
+            @list.render 'examples.list_simple', examples: models
+            @grid.render 'examples.list_grid', examples: models
       ...
 
 ### Templating Lists
@@ -39,4 +40,25 @@ Here's the dust that makes up our simple example with absolutely no frills:
     &lcub;/examples&rcub;
   &lt;/ol&gt;
   
+</code></pre>  
+
+Here's the dust that makes our grid. Note the use of a few custom helpers defined in [swell.Helpers](/page/api.client.helpers) :
+
+<pre><code>
+  &lt;table class=&quot;grid&quot;&gt;
+    &lt;tr&gt;
+      &lt;th&gt;Active&lt;/th&gt;
+      &lcub;#columns&rcub;
+        &lt;th class=&quot;&lcub;@eq value=fields[.].sortable&rcub;sortable &lcub;/eq&rcub;&lcub;@prop key=. obj=fields field=&quot;type&quot;/&rcub;&quot;&gt;&lcub;@prop key=. obj=fields field=&quot;label&quot;/&rcub;&lt;/th&gt;
+      &lcub;/columns&rcub;
+    &lt;/tr&gt;
+    &lcub;#examples&rcub;
+      &lt;tr id=&quot;&lcub;attributes._id&rcub;&quot;&gt;
+        &lt;td&gt;&lcub;@checkbox name=&quot;active&quot; bind=&quot;_id&quot; obj=attributes /&rcub;&lt;/td&gt;
+        &lcub;#columns&rcub;
+          &lt;td data-bind=&quot;&lcub;.&rcub;&quot;&gt;&lcub;@format field=fields[.] obj=attributes key=. /&rcub;&lt;/td&gt;
+        &lcub;/columns&rcub;
+      &lt;/tr&gt;
+    &lcub;/examples&rcub; 
+  &lt;/table&gt;
 </code></pre>  

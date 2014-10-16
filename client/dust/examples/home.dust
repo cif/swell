@@ -1,11 +1,10 @@
 # Examples
 
-This section is in itself, a very simple single page app. It demonstrates examples of each of the core client-side objects and code snippets.  
+This is a simple, one-collection, single page app with showing some built-in client functionality and code examples.  
 
-Notice how the hashtag changes while browing the example pages.  Essentially, **this section is a one page javascript web-app.** The text you are reading is rendered by simple render via the `home` route in `client/routers/examples.coffee`.  
+This text is rendered by a method defined and called via `home` (#home) route in `client/routers/examples.coffee`. Notice how the hashtag changes while browing these pages. 
 
 The dust template markdown is contained in `client/dust/examples/home.dust`. 
 
-
-Ready? Let't get started with [swell.Router](#router)
+Ready? Let's get started with [swell.Router](#router)
 

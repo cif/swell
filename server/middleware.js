@@ -10,41 +10,43 @@
   var path = require('path');
   var express, app, config, socket;  
   var render = require('./render');
+  var connect = require('connect');
   var setup = function(_express, _app, _socket, _config){
  
     // scope varaiables
     express = _express;
-    app = _app;
-    socket = _socket;
-    config = _config;
+    app     = _app;
+    socket  = _socket;
+    config  = _config;
     
     // set up the static routes
     app.use('/js', express.static(path.resolve(config.base + 'public/js')));
     app.use('/img', express.static(path.resolve(config.base + 'public/img')));
+    app.use('/svg', express.static(path.resolve(config.base + 'public/svg')));
     app.use('/public', express.static(path.resolve(config.base + 'public')));
-    app.get('/favicon.ico', function(req, res){ res.sendfile(path.resolve(config.base + 'public/favicon.ico')); });
+    app.get('/favicon.ico', function(req, res){ res.sendFile(path.resolve(config.base + 'public/favicon.ico')); });
     
     // cookies and sessions
-    app.use(express.cookieParser(config.server.cookie_hash || 'default-hash'));
-    app.use(express.session({secret: config.server.cookie_secret || 'default-secret'}));
-    
-    // dust views configuration
-    render.setup(express, app, socket, config);
+    app.use(connect.cookieParser(config.server.cookie_secret));
+    app.use(connect.session({secret: config.server.cookie_secret}));
     
     // basics
-    app.use(express.urlencoded());
-    app.use(express.json());
-    app.use(express.compress());
+    app.use(connect.urlencoded());
+    app.use(connect.json());
+    app.use(connect.compress());
     
     // custom midedleware handlers. Example:
     /* 
-     app.get('/a_middleware_example', function(req, res){
-      res.send('Hello world');
+     app.get('/middleware', function(req, res){
+      res.end('Hello world');
      });
     */
     
     // timeout, not sure this is working as indended... test ALL your responses!
-    app.use(express.timeout(config.server.timeout));
+    app.use(connect.timeout(config.server.timeout));
+    
+    // dust views configuration
+    render.setup(express, app, socket, config);
     
   };
   

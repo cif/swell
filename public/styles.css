@@ -87,6 +87,108 @@ section[role=main] blockquote {
 .credit a {
   font-size: 11px;
 }
+/*
+
+Dark style from softwaremaniacs.org (c) Ivan Sagalaev <Maniac@SoftwareManiacs.Org>
+
+*/
+.hljs {
+  display: block;
+  overflow-x: auto;
+  padding: 0.5em;
+  background: #444;
+  -webkit-text-size-adjust: none;
+}
+.hljs-keyword,
+.hljs-literal,
+.hljs-change,
+.hljs-winutils,
+.hljs-flow,
+.nginx .hljs-title,
+.tex .hljs-special {
+  color: #4278ce;
+}
+.hljs-regexp {
+  color: #ffa500;
+}
+.hljs,
+.hljs-subst {
+  color: #222;
+}
+.hljs-title,
+.hljs-type,
+.ini .hljs-title,
+.hljs-tag .hljs-value,
+.css .hljs-rules .hljs-value,
+.hljs-preprocessor,
+.hljs-pragma,
+.ruby .hljs-symbol,
+.ruby .hljs-symbol .hljs-string,
+.ruby .hljs-class .hljs-parent,
+.hljs-built_in,
+.django .hljs-template_tag,
+.django .hljs-variable,
+.smalltalk .hljs-class,
+.hljs-javadoc,
+.ruby .hljs-string,
+.django .hljs-filter .hljs-argument,
+.smalltalk .hljs-localvars,
+.smalltalk .hljs-array,
+.hljs-attr_selector,
+.hljs-pseudo,
+.hljs-addition,
+.hljs-stream,
+.hljs-envvar,
+.apache .hljs-tag,
+.apache .hljs-cbracket,
+.tex .hljs-command,
+.hljs-prompt,
+ {
+  color: #333;
+}
+.coffeescript .hljs-attribute {
+  font-weight: bold;
+}
+.hljs-string {
+  color: #d89f05;
+}
+.hljs-property {
+  color: #3fa53a;
+}
+.hljs-comment {
+  color: #acacac;
+}
+.hljs-annotation,
+.hljs-decorator,
+.hljs-template_comment,
+.hljs-pi,
+.hljs-doctype,
+.hljs-deletion,
+.hljs-shebang,
+.apache .hljs-sqbracket,
+.tex .hljs-formula {
+  color: #777;
+}
+.hljs-keyword,
+.hljs-literal,
+.hljs-title,
+.css .hljs-id,
+.hljs-phpdoc,
+.hljs-dartdoc,
+.hljs-type,
+.vbscript .hljs-built_in,
+.rsl .hljs-built_in,
+.smalltalk .hljs-class,
+.diff .hljs-header,
+.hljs-chunk,
+.hljs-winutils,
+.bash .hljs-variable,
+.apache .hljs-tag,
+.tex .hljs-special,
+.hljs-request,
+.hljs-status {
+  font-weight: bold;
+}
 
 /* layouts for the examples app components (forms styled separately) */
 div.grid {
@@ -94,7 +196,7 @@ div.grid {
 }
 div.grid input[type=text] {
   position: absolute;
-  top: 0;
+  top: -4px;
   right: 0;
 }
 
@@ -120,12 +222,6 @@ input[type=password].error,
 input[type=email].error,
 textarea.error {
   border: 1px solid '#c00';
-}
-input[type=text].validated,
-input[type=password].validated,
-input[type=email].validated,
-textarea.validated {
-  border: 1px solid '#0c0';
 }
 
 
@@ -184,6 +280,9 @@ table.grid td {
 }
 table.grid tr:hover {
   background: #eee;
+}
+table.grid tr:nth-child(1):hover {
+  background: transparent;
 }
 
 .loader {
@@ -404,11 +503,6 @@ aside .scroll {
   overflow: auto;
 }
 
-* {
-  -webkit-box-sizing: border-box;
-  -moz-box-sizing: border-box;
-  box-sizing: border-box;
-}
 body,
 html {
   font: 14px/1.6 'Avant Garde', Avantgarde, 'Century Gothic', CenturyGothic, 'AppleGothic', sans-serif;
@@ -427,9 +521,6 @@ iframe {
 }
 iframe.watch {
   right: 62px;
-}
-div {
-  position: relative;
 }
 p {
   margin: 3px 0 10px 0;
@@ -487,5 +578,74 @@ hr {
   background: #ccc;
   margin: 25px 0;
   clear: both;
+}
+
+/**
+ * iOS 6 style switch checkboxes
+ * by Lea Verou http://lea.verou.me
+ */
+.swell-form input[type="checkbox"] {
+/* .swell-form here acting as a filter for older browsers */
+  position: absolute;
+  opacity: 0;
+}
+.swell-form input[type="checkbox"].ios-switch + div {
+  display: inline-block;
+  vertical-align: middle;
+  width: 3em;
+  height: 1em;
+  border: 1px solid rgba(0,0,0,0.30);
+  border-radius: 999px;
+  margin: 0 0.5em;
+  background: #fff;
+  background-image: linear-gradient(rgba(0,0,0,0.10), transparent), linear-gradient(90deg, #3d99f5 50%, transparent 50%);
+  background-size: 200% 100%;
+  background-position: 100% 0;
+  background-origin: border-box;
+  background-clip: border-box;
+  overflow: hidden;
+  transition-duration: 0.4s;
+  transition-property: padding, width, background-position, text-indent;
+  box-shadow: 0 0.1em 0.1em rgba(0,0,0,0.20) inset, 0 0.45em 0 0.1em rgba(0,0,0,0.05) inset;
+  font-size: 150%;
+/* change this and see how they adjust! */
+}
+.swell-form input[type="checkbox"].ios-switch:checked + div {
+  padding-left: 2em;
+  width: 1em;
+  background-position: 0 0;
+}
+.swell-form input[type="checkbox"].ios-switch + div:before {
+  content: 'On';
+  float: left;
+  width: 1.65em;
+  height: 1.65em;
+  margin: -0.1em;
+  border: 1px solid rgba(0,0,0,0.35);
+  border-radius: inherit;
+  background: #fff;
+  background-image: linear-gradient(rgba(0,0,0,0.20), transparent);
+  box-shadow: 0 0.1em 0.1em 0.1em rgba(255,255,255,0.80) inset, 0 0 0.5em rgba(0,0,0,0.30);
+  color: #fff;
+  text-shadow: 0 -1px 1px rgba(0,0,0,0.30);
+  text-indent: -2.5em;
+}
+.swell-form input[type="checkbox"].ios-switch:active + div:before {
+  background-color: #eee;
+}
+.swell-form input[type="checkbox"].ios-switch:focus + div {
+  box-shadow: 0 0.1em 0.1em rgba(0,0,0,0.20) inset, 0 0.45em 0 0.1em rgba(0,0,0,0.05) inset, 0 0 0.4em 1px rgba(255,0,0,0.50);
+}
+.swell-form input[type="checkbox"].ios-switch + div:before,
+.swell-form input[type="checkbox"].ios-switch + div:after {
+  font: bold 60%/1.9 sans-serif;
+  text-transform: uppercase;
+}
+.swell-form input[type="checkbox"].ios-switch + div:after {
+  content: 'Off';
+  float: left;
+  text-indent: 0.5em;
+  color: rgba(0,0,0,0.45);
+  text-shadow: none;
 }
 

@@ -1,0 +1,6 @@
+# swell.Form example
+
+The main purpose of forms is to allow the manipulation of model properties. Validation can be turned on and off for realtime responses to changed inputs. 
+
+There are several default [events](/page/api.client.form#events) which [swell.Form](/page/api.client.form) will broadcast when lists are interacted with.
+

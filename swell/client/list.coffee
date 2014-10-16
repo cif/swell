@@ -79,9 +79,8 @@ class List extends Backbone.View
 
     # determine the data type to sort by (if applicable)
     @sort_data_type = 'string'
-    @sort_data_type = 'number' if $(e.target).hasClass('number')
+    @sort_data_type = 'number' if $(e.target).hasClass('number') or $(e.target).hasClass('currency')
     @sort_data_type = 'date' if $(e.target).attr('class').indexOf('date') >= 0
-    console.log @sort_data_type
     
     # update the heading itself
     @heading = e.target

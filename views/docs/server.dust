@@ -1,6 +1,6 @@
 # Server
 
-At its core, Swell server is essentially just a stubbed out [Express](http://expressjs.com/) app that you can extend as needed. For example, if you wanted to install [Passport](http://passportjs.org/) as your authentication service, then all you would have to do is install the module and add the appropriate routes.<br> The compiled [Responder](/page/server#responders), [Collection](/page/server#collections) and [Model](/page/server#models) objects are the sugar in your coffee.
+At its core, Swell's server is a simple [Express](http://expressjs.com/) app which can be extend as needed. For example, if you wanted to install [Passport](http://passportjs.org/) as your authentication service simply install the module and define appropriate routes. Compiled [Responder](/page/server#responders), [Collection](/page/server#collections) and [Model](/page/server#models) objects provide the sugar.
 
 ### Pipeline
 The modules in `server/` work together to handle the request and response flow:
@@ -34,7 +34,7 @@ The modules in `server/` work together to handle the request and response flow:
   <p><b>server/socket.js</b> handles emit object broadcasts returned to render.js out() method and sends the packets to appropriately subscribed clients.</p>
 </div>
 
-### Middleware
+### Middleware / Overrides
 
 Middleware is the first stop on the request pipeline. Any route matching functions implemented in `server/middelware.js` will take priority over the default application routes. This is handy if you want to make use of **regular expression** route matching, or require more control over response handling for certain routes. 
 
@@ -47,17 +47,17 @@ Here's a simple example handling a request via regex matched route in middleware
     });
 
 
-### Routes
+### Routes / Mapping
 
-There are two ways in which requests are routed to a responder object method (located in server/swell.js): 
+By default **routes are maped from the request URIs**. For example, a GET request to /examples/ would call `Examples.get(req, callback)` and a request to /examples/by_price/ would map to `Examples.by_price(req, callback)`.  Additional URI parts are split on / and passed as an array: `req.uri_params`
 
-**1. swell.json** allows you to directly map routes to your responder object methods using your configuration file and specify arguments passed to `req.params`. Example:
+The `swell.json` configuration file allows you to override the default behavior routes to your responder object methods using your configuration file and specify arguments passed as `req.params`. Example:
 
 
-    "/examples/edit/:id" : "Examples.edit"
+    "/examples/edit/:id" : "Examples.edit",
+    "/examples/some_seo_keyword/:name" : "Examples.view_by_name"
 
  
-**2. URI mapping** will automatically map request URIs to the responder object.method of the same pattern. For example, a GET request to /widgets/ would call `Examples.get(req, callback)` and an request to /widgets/by_price/ would map to `Examples.by_price(req, callback)`.  Additional `/arg`'s in your URIs get passed as an array `req.uri_params`
 
 
 ### Responders
@@ -127,7 +127,7 @@ It's common these days for applications to use many data sources. For that reaso
 
 ### Models
 
-The basic model object is **essentially a set of rules, or a filter which objects will pass through** to persisted on the server. Swell core's `sanitize(obj)` method (similar to <a href="http://backbonejs.org/#Model-validate">BackboneJS</a>) which validates and sanitizes data within your app. You may define validate for further validation as needed.  Models are very often a **convenient place to define business logic methods** related to the data the object it stores. As with collecitons, your implementations are **shared by the client**, so be careful not to override [Backbone.Model](http://backbonejs.org/#Model) core functionality.
+A Swell model object is **a set of rules, or a filter** which objects will pass through before they are persisted. Swell core's `sanitize(obj)` employs the rules to keep your data clean. You can define `validate()` for further validation as needed. Your implementations of model are **shared by the client**, so be careful not to override [Backbone.Model](http://backbonejs.org/#Model) core functionality.
 
 *A simple "Example" model (written in coffeescript):*
 
@@ -183,9 +183,9 @@ These can now be specified as a `resource` property of any swell.Collection inst
 
 ### Views
 
-Unless you are creating a PhoneGap or single page application, you may run into cases where it makes sense to render markup instead of JSON. **SEO is often the determining factor** in making this decision. In order to render views, you can specify a `view` property in your response. The default layout is specified in **swell.json** however this can also be overriden by specifying a `layout` property. 
+Unless you are creating a single page application you'll likely run into cases where it makes sense to render HTML markup instead of JSON. **SEO is often the determining factor** in making this decision. In order to render views, you can specify a `view` property in your callback response from any responder method. The default layout is specified in **swell.json** however this can also be overriden by specifying a `layout` property. 
 
-*Here is an example responder method that renders markup (in coffeescript):*
+*Here is an example responder method that renders a static page:*
 
     document: (req, callback) =>
       data =

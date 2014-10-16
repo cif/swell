@@ -82,4 +82,4 @@ class Collection
           delete doc[prop]
     res          
   
-  
+    

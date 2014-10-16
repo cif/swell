@@ -1,6 +1,5 @@
 # swell.Router
 
-### Routing
 Routing is the way in which Backbone provides history to the browser by watching for changes in `window.location.hash`. 
 
 For more information check out [BackboneJS's Router](http://backbonejs.org/#Router) documentation. The single router servicing this app example is `client/routers/examples.coffee`.
@@ -20,6 +19,7 @@ For more information check out [BackboneJS's Router](http://backbonejs.org/#Rout
         'edit/:id' : 'edit'
   
       init: (@app) =>
+        # scoping the collection directly to the window is optional, but handy 
         window.examples = @collection = new collections.Examples
         @list = new swell.List el: '.simple', sortable: true
         grid = 
@@ -36,9 +36,9 @@ For more information check out [BackboneJS's Router](http://backbonejs.org/#Rout
       ...  
 
 ### Binding & Unbinding
-**Now is a good time to open your console**. Refresh the page and take note of the info that Swell is logging, partiulary `unbinding route:router` and `binding route:router`.  Swell is **automatically undelegating and unbinding all other app routers** and then binding the current in-use router.
+**Now is a good time to open your console**. Refresh the page and take note of the info that Swell is logging, partiulary `unbinding route:router` and `binding route:router`.  Swell is **automatically undelegating and unbinding all other app routers** and then binding the current in-use router. The automatic unbinding of your events and listeners saves valuable memory and allows Bakcbone.View events to share common class names e.g. <br>`'click .save' : 'save'` without misfiring events.
 
-Because of this, `bind()` and `unbind()` methods on your router are an ideal place to bind your data to your views. The unbinding of your events and listeners saves valuable memory and allows Bakcbone.View events to share common class names e.g. <br>`'click .save' : 'save'` without misfiring events. 
+The `bind()` and `unbind()` methods are also a convenient place to bind data events to your views: 
 
 *Here's how we are binding our examples app data and views together:*
 
@@ -52,7 +52,7 @@ Because of this, `bind()` and `unbind()` methods on your router are an ideal pla
         # but, call update() on the grid in case it is user sorted
         examples.on 'updated', (res) =>
           @list.render 'examples.list_simple', examples: examples.models
-          @grid.update
+          @grid.update()
         
           
       unbind: =>

@@ -16,7 +16,9 @@ With the exception of dependencies, javascript and javascript-template objects a
 
 This object could be instantiated with this code `@example_editor = new views.examples.Editor`. The same is true of any folder you target and namespace using your configuration file.   
 
-**NOTE: Files are complied in alphabetical order.**  To accommodate potential issues with this, you can use _  e.g. `views/_helpers.coffee` to ensure that objects that are extend are defined first at runtime. A cleaner way, is to use the "break out" folders with the configuration.
+**NOTE: Files are complied in alphabetical order.**  The easy workaround is use _  e.g. `views/_helpers.coffee` to ensure that super objects that defined before object extending them at runtime. 
+
+A cleaner alternative is to use the "break out" folders with the configuration.
 
 *Here's an excerpt from the default [swell.json](https://github.com/cif/swell/blob/master/swell.json):*
       
@@ -50,7 +52,7 @@ This object could be instantiated with this code `@example_editor = new views.ex
 
 Templates are watched and compiled into a single development target `public/tmpl.js` by default. Swell comes packaged with [Dust](https://github.com/linkedin/dustjs/wiki/Dust-Tutorial) support by default. Templates can be rendered asynchronously within your application views like so:
 
-    class Report view extends Backbone.View
+    class ReportView extends Backbone.View
       el:'.graph2'
       render: (context) =>
         dust.render 'reports.chart', context, (err, res) =>
@@ -108,6 +110,8 @@ When it comes time to deploy your application, it should first be packaged and m
 
     $ swell -p 
     
-This will minifiy and concatenate your javascript, template, and vendor development targets into `public/production.js`, or another file that can be specified in your configuration. 
+This will minifiy and concatenate your javascript, template, and vendor development targets into `public/production.js`, or another file that can be specified in your configuration.
+
+For more complex packaging and deployment scenarios, [Grunt](http://gruntjs.com/) is always a good choice.
 
 

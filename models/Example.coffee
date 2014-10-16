@@ -13,10 +13,10 @@ class Example extends swell.Model
     name:
       type: 'string'
       label: 'Full Name'
+      sortable: true
       not_empty: true
       not: 'bad'
       message: 'Custom description validation message'
-      sortable: true
       
     color:
       type: 'string'
@@ -32,10 +32,17 @@ class Example extends swell.Model
       
     last_seen:
       label: 'Last Seen'
-      type: 'datetime'
+      type: 'date'
       past: false
-      format: 'MMM Do YYYY h:ma'
+      # this can break formatting in grids if you do not stick with common date formats
+      # format: 'MMM Do YYYY h:mma'  
       sortable: true
+    
+    price:
+      label: 'MSRP'
+      type: 'currency'
+      sortable: true
+      format: '$,'  # symbol and delimiter
     
     email: 
       type:'email'
@@ -45,8 +52,10 @@ class Example extends swell.Model
       length: 2
       
   
-  # defaults are in their own store for backbone
+  # defaults are in their own property for backbone
   defaults:
     name: 'Swell Example Model'
     color: 'cc0000'
+    length: '12'
+    
     

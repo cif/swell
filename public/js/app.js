@@ -1,4 +1,4 @@
-// last compiled: 2014-08-07 11:08:28
+// last compiled: 2014-10-15 12:10:88
 
 var swell = {};
 var models = {};
@@ -6,7 +6,6 @@ var collections = {};
 var routers = {};
 var views = {};
     views.examples = {};
-    views.reports = {};
 
 __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
 __hasProp = {}.hasOwnProperty,
@@ -17,6 +16,7 @@ swell.Collection = (function() {
   __extends(Collection, Backbone.Collection);
 
   function Collection() {
+    this.search = __bind(this.search, this);
     this.sorted = __bind(this.sorted, this);
     this.pull = __bind(this.pull, this);
     this.snag = __bind(this.snag, this);
@@ -107,7 +107,7 @@ swell.Collection = (function() {
     var handler;
     handler = function(err, res) {
       if (err) {
-        return console.error('[swell] ' + moment('HH:mm:ss') + ' error sorting a collection: ' + err.responseText);
+        return console.error('[swell] ' + moment().format('HH:mm:ss') + ' error sorting a collection: ' + err.responseText);
       }
     };
     return helpers.ajax(this.url + 'sort', handler, {
@@ -115,6 +115,25 @@ swell.Collection = (function() {
         sorted: ordered
       })
     }, 'POST');
+  };
+
+  Collection.prototype.search = function(query, fields, case_sensitive) {
+    var model, results, search, _i, _len, _ref;
+    console.log(query, fields);
+    results = [];
+    _ref = this.models;
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      model = _ref[_i];
+      if (typeof fields === 'array') {
+        console.log('fancy!');
+      } else {
+        search = model.get(fields).toString();
+        if (!case_sensitive) search = search.toLowerCase();
+        if (!case_sensitive) search = query.toLowerCase();
+        if (search.indexOf(query) > -1) results.push(model);
+      }
+    }
+    return results;
   };
 
   return Collection;
@@ -267,6 +286,10 @@ swell.Helpers = (function() {
     });
   };
 
+  Helpers.prototype.delay = function(time, callback) {
+    return window.setTimeout(callback, time);
+  };
+
   Helpers.prototype.checkbox = function(chunk, context, bodies, params) {
     var key, obj, out, val, _val;
     out = '<input type="checkbox"';
@@ -297,6 +320,24 @@ swell.Helpers = (function() {
     } else {
       return chunk.write('');
     }
+  };
+
+  Helpers.prototype.format = function(chunk, context, bodies, params) {
+    var dec, out;
+    out = params.obj[params.key].toString();
+    if (params.field.type === 'currency' && params.field.format > '') {
+      out = params.field.format.substr(0, 1) + out.replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1" + params.field.format.substr(1, 1));
+      dec = out.substr(out.lastIndexOf('.'), out.length);
+      if (dec.indexOf('.') === -1) out += '.00';
+      if (dec.length === 2) out += '0';
+    }
+    if (params.field.type === 'number' && params.field.format > '') {
+      out = out.replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1" + params.field.format);
+    }
+    if (params.field.type === 'date' && params.field.format > '') {
+      out = moment(out).format(params.field.format);
+    }
+    return chunk.write(out);
   };
 
   Helpers.prototype.prop = function(chunk, context, bodies, params) {
@@ -415,11 +456,12 @@ swell.List = (function() {
     if (!this.sorting_dir) this.sorting_dir = 1;
     if (heading === this.heading) this.sorting_dir *= -1;
     this.sort_data_type = 'string';
-    if ($(e.target).hasClass('number')) this.sort_data_type = 'number';
+    if ($(e.target).hasClass('number') || $(e.target).hasClass('currency')) {
+      this.sort_data_type = 'number';
+    }
     if ($(e.target).attr('class').indexOf('date') >= 0) {
       this.sort_data_type = 'date';
     }
-    console.log(this.sort_data_type);
     this.heading = e.target;
     $('tr th').removeClass('sorted-up sorted-down');
     $('tr th span').remove();
@@ -657,25 +699,6 @@ swell.Synchro = (function() {
   return Synchro;
 
 })();
-models.Book = (function() {
-
-  __extends(Book, swell.Model);
-
-  function Book() {
-    Book.__super__.constructor.apply(this, arguments);
-  }
-
-  Book.prototype.has_many = [collections.Chapters];
-
-  Book.prototype.fields = {
-    title: {
-      type: 'string'
-    }
-  };
-
-  return Book;
-
-})();
 models.Example = (function() {
 
   __extends(Example, swell.Model);
@@ -690,10 +713,10 @@ models.Example = (function() {
     name: {
       type: 'string',
       label: 'Full Name',
+      sortable: true,
       not_empty: true,
       not: 'bad',
-      message: 'Custom description validation message',
-      sortable: true
+      message: 'Custom description validation message'
     },
     color: {
       type: 'string',
@@ -709,10 +732,15 @@ models.Example = (function() {
     },
     last_seen: {
       label: 'Last Seen',
-      type: 'datetime',
+      type: 'date',
       past: false,
-      format: 'MMM Do YYYY h:ma',
       sortable: true
+    },
+    price: {
+      label: 'MSRP',
+      type: 'currency',
+      sortable: true,
+      format: '$,'
     },
     email: {
       type: 'email'
@@ -725,7 +753,8 @@ models.Example = (function() {
 
   Example.prototype.defaults = {
     name: 'Swell Example Model',
-    color: 'cc0000'
+    color: 'cc0000',
+    length: '12'
   };
 
   return Example;
@@ -775,7 +804,7 @@ collections.Examples = (function() {
 
   Examples.prototype.sort_by = 'sort_order';
 
-  Examples.prototype.list = ['_id', 'name', 'color', 'length', 'last_seen', 'active'];
+  Examples.prototype.list = ['_id', 'name', 'color', 'length', 'price', 'last_seen', 'active'];
 
   return Examples;
 
@@ -830,8 +859,10 @@ routers.Application = (function() {
     window.helpers = this.helpers = new views.Helpers(options);
     window.synchro = this.synchro = new swell.Synchro(options);
     this.examples = new routers.Examples(this);
-    this.reports = new routers.Reports(this);
     Backbone.history.start();
+    $('pre code').each(function(i, block) {
+      return hljs.highlightBlock(block);
+    });
     console.info('[swell] ' + moment().format('HH:mm:ss') + ' app instantiated as window.app ');
     return this;
   };
@@ -863,6 +894,7 @@ routers.Examples = (function() {
   __extends(Examples, swell.Router);
 
   function Examples() {
+    this.form = __bind(this.form, this);
     this.list = __bind(this.list, this);
     this.router = __bind(this.router, this);
     this.home = __bind(this.home, this);
@@ -877,10 +909,10 @@ routers.Examples = (function() {
   Examples.prototype.routes = {
     'home': 'home',
     'router': 'router',
-    'list/search/:query': 'list',
     'list': 'list',
+    'list/search/:query': 'search',
     'form': 'form',
-    'edit/:id': 'edit'
+    'edit/:id': 'form'
   };
 
   Examples.prototype.init = function(app) {
@@ -893,7 +925,7 @@ routers.Examples = (function() {
     return this.grid = new swell.List({
       el: '.grid',
       sortable: false,
-      columns: ['name', 'color', 'length', 'last_seen'],
+      columns: ['name', 'color', 'length', 'price', 'last_seen'],
       fields: new models.Example().fields
     });
   };
@@ -905,7 +937,7 @@ routers.Examples = (function() {
       _this.list.render('examples.list_simple', {
         examples: examples.models
       });
-      return _this.grid.update;
+      return _this.grid.update();
     });
   };
 
@@ -919,60 +951,40 @@ routers.Examples = (function() {
   };
 
   Examples.prototype.router = function() {
-    return helpers.render('section[role=main]', 'examples.router', this.app);
+    return helpers.render('section[role=main]', 'examples.router', this.app, function() {
+      return $('pre code').each(function(i, block) {
+        return hljs.highlightBlock(block);
+      });
+    });
   };
 
-  Examples.prototype.list = function(search) {
+  Examples.prototype.list = function() {
     var _this = this;
     return helpers.render('section[role=main]', 'examples.list', this.app, function() {
       _this.delegate();
       helpers.loader('.simple,.grid');
       return examples.grab(function(err, models) {
-        var display;
-        display = search ? _this.collection.search(search, 'name') : models;
         _this.list.render('examples.list_simple', {
-          examples: display
+          examples: models
         });
-        return _this.grid.render('examples.list_grid', {
-          examples: display
+        _this.grid.render('examples.list_grid', {
+          examples: models
+        });
+        return $('pre code').each(function(i, block) {
+          return hljs.highlightBlock(block);
         });
       });
     });
   };
 
+  Examples.prototype.form = function(id) {
+    var _this = this;
+    return helpers.render('section[role=main]', 'examples.form', this.app, function() {
+      return _this.delegate();
+    });
+  };
+
   return Examples;
-
-})();
-routers.Reports = (function() {
-
-  __extends(Reports, swell.Router);
-
-  function Reports() {
-    this.bind = __bind(this.bind, this);
-    this.reports = __bind(this.reports, this);
-    this.init = __bind(this.init, this);
-    Reports.__super__.constructor.apply(this, arguments);
-  }
-
-  Reports.prototype.routes = {
-    'reports': 'reports',
-    'reports/:which': 'reports'
-  };
-
-  Reports.prototype.init = function() {
-    return this.view = new views.reports.ReportsChart(this);
-  };
-
-  Reports.prototype.reports = function(which) {
-    if (which == null) which = 'reservation_fees';
-    return console.log('bind?');
-  };
-
-  Reports.prototype.bind = function() {
-    return console.log('reports binding!');
-  };
-
-  return Reports;
 
 })();
 views.Helpers = (function() {
@@ -1000,116 +1012,5 @@ views.examples.Form = (function() {
   }
 
   return Form;
-
-})();
-views.examples.List = (function() {
-
-  __extends(List, swell.List);
-
-  function List() {
-    List.__super__.constructor.apply(this, arguments);
-  }
-
-  List.prototype.el = '.simple';
-
-  return List;
-
-})();
-views.reports.ReportsChart = (function() {
-
-  __extends(ReportsChart, Backbone.View);
-
-  function ReportsChart() {
-    this.reservation_fees = __bind(this.reservation_fees, this);
-    this.render = __bind(this.render, this);
-    this.initialize = __bind(this.initialize, this);
-    ReportsChart.__super__.constructor.apply(this, arguments);
-  }
-
-  ReportsChart.prototype.el = '.main';
-
-  ReportsChart.prototype.initialize = function(router) {
-    this.router = router;
-  };
-
-  ReportsChart.prototype.render = function(name) {
-    var _this = this;
-    return dust.render('reports.chart', {
-      name: name
-    }, function(err, html) {
-      _this.$el.html(html);
-      if (name === 'reservation_fees') return _this.reservation_fees(name);
-    });
-  };
-
-  ReportsChart.prototype.reservation_fees = function(which) {
-    var context;
-    var _this = this;
-    context = document.getElementById('chart').getContext("2d");
-    return helpers.ajax('/statements/annual/', function(err, data) {
-      var chart, colors, draw, index, month, months, push, set, year, years, _i, _j, _k, _l, _len, _len2, _len3, _len4, _m, _ref, _ref2;
-      draw = {
-        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-        datasets: []
-      };
-      years = {};
-      colors = ['red', 'blue', 'green', 'orange'];
-      _ref = data.billed;
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        month = _ref[_i];
-        month.color = colors[_i];
-        if (!years[month.year]) years[month.year] = [];
-        years[month.year].push(month);
-      }
-      index = 0;
-      for (year in years) {
-        months = years[year];
-        set = {
-          label: year + ' Res Fees',
-          strokeColor: colors[index],
-          fillColor: colors[index],
-          data: []
-        };
-        for (_j = 0, _len2 = months.length; _j < _len2; _j++) {
-          month = months[_j];
-          set.data.push(month.res_fees);
-        }
-        draw.datasets.push(set);
-        index++;
-      }
-      years = {};
-      colors = ['green', 'orange', 'purple', 'pink', 'black'];
-      _ref2 = data.projected;
-      for (_k = 0, _len3 = _ref2.length; _k < _len3; _k++) {
-        month = _ref2[_k];
-        month.color = colors[_i];
-        if (!years[month.year]) years[month.year] = [];
-        years[month.year].push(month);
-      }
-      index = 0;
-      for (year in years) {
-        months = years[year];
-        set = {
-          label: year + ' Projected',
-          strokeColor: colors[index],
-          fillColor: colors[index],
-          data: []
-        };
-        for (_m = 1; _m < 13; _m++) {
-          push = 0;
-          for (_l = 0, _len4 = months.length; _l < _len4; _l++) {
-            month = months[_l];
-            if ((month.month + 1) === _m) push = month.res_fees;
-          }
-          set.data.push(push);
-        }
-        draw.datasets.push(set);
-        index++;
-      }
-      return chart = new Chart(context).Bar(draw, false);
-    });
-  };
-
-  return ReportsChart;
 
 })();
