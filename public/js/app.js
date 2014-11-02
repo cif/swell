@@ -1,4 +1,4 @@
-// last compiled: 2014-10-15 12:10:88
+// last compiled: 2014-10-30 19:10:03
 
 var swell = {};
 var models = {};
@@ -39,7 +39,7 @@ swell.Collection = (function() {
 
   Collection.prototype.initialize = function(options) {
     var _this = this;
-    synchro.on(this.store, this.update);
+    if (this.sychronize) synchro.on(this.store, this.update);
     this.response_callback = {
       success: function(data) {
         console.info('[swell] ' + moment().format('HH:mm:ss') + ' Collection.' + _this.operation + ' returned: ', data);
@@ -59,28 +59,29 @@ swell.Collection = (function() {
   };
 
   Collection.prototype.update = function(data) {
-    var attr, _i, _len, _ref;
-    if (this.models.length === 0) return false;
-    if (!data || !data.res) {
-      return console.error('[swell] ' + moment().format('HH:mm:ss') + ' Collection.update recieved empty or bad data from the server:', arguments);
-    }
-    _ref = data.res;
-    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-      attr = _ref[_i];
-      this.add(attr, {
-        merge: true
+    if (data.type && data.type === 'remove') {
+      if (data.res) this.remove(data.res);
+    } else {
+      this.add(data.res, {
+        merge: data.res ? true : void 0
       });
     }
-    return this.trigger('updated', this);
+    if (data.type) return this.trigger(data.type, this);
   };
 
   Collection.prototype.grab = function(callback) {
     var _this = this;
     if (this.models.length === 0) {
       return this.pull(function(err, res) {
-        return callback(null, _this.models);
+        if (err) callback(err);
+        if (res.length === 0) {
+          return callback(null, false);
+        } else {
+          return callback(null, _this.models);
+        }
       });
     } else {
+      console.log('wtf?', this.models);
       return callback(null, this.models);
     }
   };
@@ -99,6 +100,7 @@ swell.Collection = (function() {
   Collection.prototype.pull = function(callback, options) {
     this.callback = callback;
     options = _.extend(this.response_callback, options);
+    if (typeof options.silent === 'undefined') options.silent = true;
     this.operation = 'pull';
     return this.fetch(options);
   };
@@ -119,13 +121,12 @@ swell.Collection = (function() {
 
   Collection.prototype.search = function(query, fields, case_sensitive) {
     var model, results, search, _i, _len, _ref;
-    console.log(query, fields);
     results = [];
     _ref = this.models;
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       model = _ref[_i];
       if (typeof fields === 'array') {
-        console.log('fancy!');
+        console.log('TODO!');
       } else {
         search = model.get(fields).toString();
         if (!case_sensitive) search = search.toLowerCase();
@@ -255,12 +256,13 @@ swell.Form = (function() {
 })();
 swell.Helpers = (function() {
 
+  Helpers.prototype.bindings = {};
+
   function Helpers() {
     this.ajax = __bind(this.ajax, this);
     this.falsey = __bind(this.falsey, this);
     this.checkbox = __bind(this.checkbox, this);
     var _this = this;
-    _.extend(dust.helpers, this);
     this.response_callback = {
       success: function(data) {
         console.info('[swell] ' + moment().format('HH:mm:ss') + ' Helpers.ajax returned: ', data);
@@ -279,15 +281,23 @@ swell.Helpers = (function() {
     return $(selector).html(loader);
   };
 
-  Helpers.prototype.render = function(selector, template, context, callback) {
-    return dust.render(template, context, function(err, out) {
-      $(selector).html(out);
-      if (callback) return callback();
-    });
+  Helpers.prototype.render = function(selector, template, view, context, callback) {
+    $(selector).html('');
+    return $(selector).append(template.call(view, context));
   };
 
   Helpers.prototype.delay = function(time, callback) {
     return window.setTimeout(callback, time);
+  };
+
+  Helpers.prototype.tmpl = function(str, obj) {
+    var prop, val, vars;
+    for (prop in obj) {
+      val = obj[prop];
+      vars = new RegExp('\{' + prop + '\}', 'g');
+      str = str.replace(vars, val);
+    }
+    return str;
   };
 
   Helpers.prototype.checkbox = function(chunk, context, bodies, params) {
@@ -324,6 +334,7 @@ swell.Helpers = (function() {
 
   Helpers.prototype.format = function(chunk, context, bodies, params) {
     var dec, out;
+    if (!params.obj[params.key]) return chunk.write('');
     out = params.obj[params.key].toString();
     if (params.field.type === 'currency' && params.field.format > '') {
       out = params.field.format.substr(0, 1) + out.replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1" + params.field.format.substr(1, 1));
@@ -378,6 +389,17 @@ swell.Helpers = (function() {
     return $.ajax(options);
   };
 
+  Helpers.prototype.string_to_prop = function(str, delim) {
+    var obj, path;
+    if (delim == null) delim = '.';
+    path = str.split(delim);
+    obj = window;
+    while (path.length) {
+      obj = obj[path.shift()];
+    }
+    return obj;
+  };
+
   return Helpers;
 
 })();
@@ -396,6 +418,8 @@ swell.List = (function() {
     List.__super__.constructor.apply(this, arguments);
   }
 
+  List.prototype.nodes = {};
+
   List.prototype.events = {};
 
   List.prototype.__events = {
@@ -413,16 +437,22 @@ swell.List = (function() {
 
   List.prototype.init = function(options) {};
 
+  List.prototype.update = function(model) {
+    return console.log(this.nodes);
+  };
+
+  List.prototype.add = function(model) {};
+
+  List.prototype.remove = function(model) {};
+
   List.prototype.render = function(template, context, callback) {
-    var _this = this;
     _.extend(context, this);
     this.setElement(this.el_str);
-    return helpers.render(this.el_str, template, context, function(err, res) {
-      if (callback) callback(err, res);
-      return $(_this.el_str + ' ol').sortable({
-        update: _this.sortable ? _this.sorted : void 0
-      });
+    helpers.render(this.el_str, template, this.nodes, context);
+    $(this.el_str + ' ol').sortable({
+      update: this.sortable ? this.sorted : void 0
     });
+    return console.log('wtf?', this.nodes);
   };
 
   List.prototype.clicked = function(e) {
@@ -431,6 +461,9 @@ swell.List = (function() {
       e.target = e.target.parentNode;
     }
     id = $(e.target).attr('id');
+    if (!id) {
+      throw new Error('[swell] ' + moment().format('HH:mm:ss') + ' Swell.List clicked() error: id attribute is not defined on the li or tr tag!');
+    }
     return this.trigger('clicked', id, e);
   };
 
@@ -440,6 +473,9 @@ swell.List = (function() {
     $(this.el_str + ' ol li').each(function(index) {
       var id;
       id = $(this).attr('id');
+      if (!id) {
+        throw new Error('[swell] ' + moment().format('HH:mm:ss') + ' Swell.List sorted() error: id attribute is not defined on the li tag!');
+      }
       return ordered[id] = index;
     });
     return this.trigger('sorted', ordered, e);
@@ -634,14 +670,18 @@ swell.Router = (function() {
   Router.prototype.initialize = function(app) {
     var _this = this;
     this.app = app;
-    this.app.register(this);
-    this.init.apply(this, arguments);
+    if (this.collection) {
+      this.collection = helpers.string_to_prop(this.collection);
+      this.collection = new this.collection();
+    }
     this.on('all', function(route) {
       if (route === 'route') return;
       _this.app.undelegate(route);
       _this.delegate(route);
       if (_this.title) return $('title').text(_this.title);
     });
+    this.app.register(this);
+    this.init.apply(this, arguments);
     return this;
   };
 
@@ -754,7 +794,8 @@ models.Example = (function() {
   Example.prototype.defaults = {
     name: 'Swell Example Model',
     color: 'cc0000',
-    length: '12'
+    length: '12',
+    sort_order: 5000
   };
 
   return Example;
@@ -798,7 +839,7 @@ collections.Examples = (function() {
 
   Examples.prototype.url = '/examples/';
 
-  Examples.prototype.resource = 'mysql-swell';
+  Examples.prototype.resource = 'mongo-example';
 
   Examples.prototype.store = 'examples';
 
@@ -906,6 +947,8 @@ routers.Examples = (function() {
 
   Examples.prototype.title = 'Swell Client Examples';
 
+  Examples.prototype.collection = 'collections.Examples';
+
   Examples.prototype.routes = {
     'home': 'home',
     'router': 'router',
@@ -917,8 +960,8 @@ routers.Examples = (function() {
 
   Examples.prototype.init = function(app) {
     this.app = app;
-    window.examples = new collections.Examples;
-    this.list = new swell.List({
+    window.examples = this.collection;
+    this.list = new views.examples.List({
       el: '.simple',
       sortable: true
     });
@@ -933,46 +976,41 @@ routers.Examples = (function() {
   Examples.prototype.bind = function() {
     var _this = this;
     this.list.on('sorted', examples.sorted);
-    return examples.on('updated', function(res) {
-      _this.list.render('examples.list_simple', {
+    examples.on('change', this.list.update);
+    return examples.on('sort', function(collection) {
+      return _this.list.render(dom.examples.list_simple, {
         examples: examples.models
       });
-      return _this.grid.update();
     });
   };
 
   Examples.prototype.unbind = function() {
     this.list.off('sorted');
-    return examples.off('updated');
+    return examples.off('change add remove sort');
   };
 
   Examples.prototype.home = function() {
-    return helpers.render('section[role=main]', 'examples.home', this.app);
+    return helpers.render('section[role=main]', dom.examples.home, {}, this.app);
   };
 
   Examples.prototype.router = function() {
-    return helpers.render('section[role=main]', 'examples.router', this.app, function() {
-      return $('pre code').each(function(i, block) {
-        return hljs.highlightBlock(block);
-      });
+    helpers.render('section[role=main]', dom.examples.router, this.app);
+    return $('pre code').each(function(i, block) {
+      return hljs.highlightBlock(block);
     });
   };
 
   Examples.prototype.list = function() {
     var _this = this;
-    return helpers.render('section[role=main]', 'examples.list', this.app, function() {
-      _this.delegate();
-      helpers.loader('.simple,.grid');
-      return examples.grab(function(err, models) {
-        _this.list.render('examples.list_simple', {
-          examples: models
-        });
-        _this.grid.render('examples.list_grid', {
-          examples: models
-        });
-        return $('pre code').each(function(i, block) {
-          return hljs.highlightBlock(block);
-        });
+    helpers.render('section[role=main]', dom.examples.list, {}, this.app);
+    this.delegate();
+    helpers.loader('.simple,.grid');
+    return examples.grab(function(err, models) {
+      _this.list.render(dom.examples.list_simple, {
+        examples: models
+      });
+      return $('pre code').each(function(i, block) {
+        return hljs.highlightBlock(block);
       });
     });
   };
@@ -1012,5 +1050,23 @@ views.examples.Form = (function() {
   }
 
   return Form;
+
+})();
+views.examples.List = (function() {
+
+  __extends(List, swell.List);
+
+  function List() {
+    this.update = __bind(this.update, this);
+    List.__super__.constructor.apply(this, arguments);
+  }
+
+  List.prototype.tmpl = '<span style="color:#{color}">{name}</span>';
+
+  List.prototype.update = function(model) {
+    return this.nodes[model.id].innerHTML = helpers.tmpl(this.tmpl, model.attributes);
+  };
+
+  return List;
 
 })();

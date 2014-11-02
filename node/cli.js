@@ -35,7 +35,7 @@ exports.nom = nom()
           help: "set a new or existing configuration variable in your json <key> <value>. (use quotes)\n"
        })
        .option('remove', {
-          abbr: 'd',
+          abbr: 'r',
           help: "remove a <key> from json configuration. (use quotes)\n"
        })
        .nocolors().nom();

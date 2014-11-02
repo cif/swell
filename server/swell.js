@@ -1,4 +1,4 @@
-// last compiled: 2014-10-15 10:10:32
+// last compiled: 2014-10-30 19:10:20
 
 var swell = {};
 var models = {};
@@ -68,7 +68,10 @@ swell.Collection = (function() {
     if (!cleaned) {
       return callback('[swell] data sanitization error: ' + this.model.invalid);
     }
-    return this.db.update(data[this.model.key], cleaned, callback);
+    return this.db.update(data[this.model.key], cleaned, function(err, res) {
+      if (err) callback(err);
+      return callback(null, cleaned);
+    });
   };
 
   Collection.prototype.remove = function(data, callback) {
@@ -522,20 +525,22 @@ swell.Mongo = (function() {
 
   function Mongo(collection) {
     this.collection = collection;
-    this.valid_id = __bind(this.valid_id, this);
-    this.bump = __bind(this.bump, this);
     this.destroy = __bind(this.destroy, this);
     this.update = __bind(this.update, this);
-    this.insert = __bind(this.insert, this);
     this.get = __bind(this.get, this);
     this.find = __bind(this.find, this);
+    this.insert = __bind(this.insert, this);
     try {
       this.db = mongo.connect('mongodb://' + this.collection.data.host + ':27017/' + this.collection.data.db, [this.collection.store]);
     } catch (e) {
-      console.log('caugh');
+      console.log('[swell-mongo] connection error:', e.getMessage());
     }
     this;
   }
+
+  Mongo.prototype.insert = function(object, callback) {
+    return this.db[this.collection.store].save(object, callback);
+  };
 
   Mongo.prototype.find = function(options, callback) {
     if (options.id) delete options.id;
@@ -543,35 +548,29 @@ swell.Mongo = (function() {
   };
 
   Mongo.prototype.get = function(id, callback) {
-    if (!this.valid_id(id)) {
-      callback('[swell-mongo] bad object id argument: ' + id);
-    }
     return this.db[this.collection.store].findOne({
       _id: mongo.ObjectId(id)
     }, callback);
   };
 
-  Mongo.prototype.insert = function(object, callback) {
-    return this.db[this.collection.store].save(object, callback);
-  };
-
-  Mongo.prototype.update = function(object, callback) {
-    return this.db[this.collection.store].save(object, callback);
-  };
-
-  Mongo.prototype.destroy = function(object, callback) {
-    if (!this.valid_id(id)) {
-      callback('[swell-mongo] bad object id argument: ' + id);
+  Mongo.prototype.update = function(id, object, callback) {
+    var prop, update, val;
+    update = {
+      $set: {}
+    };
+    for (prop in object) {
+      val = object[prop];
+      if (prop !== '_id') update.$set[prop] = val;
     }
+    return this.db[this.collection.store].update({
+      _id: mongo.ObjectId(object._id)
+    }, update, callback);
+  };
+
+  Mongo.prototype.destroy = function(id, object, callback) {
     return this.db[this.collection.store].remove({
       _id: mongo.ObjectId(object.id)
     }, callback);
-  };
-
-  Mongo.prototype.bump = function(store, field, value, key, id, callback) {};
-
-  Mongo.prototype.valid_id = function(id) {
-    return id.match('^[0-9a-fA-F]{24}$');
   };
 
   return Mongo;
@@ -887,6 +886,7 @@ swell.Responder = (function() {
   };
 
   Responder.prototype.put = function(req, callback) {
+    var _this = this;
     if (!this.expose_rest) {
       return callback(null, {
         unauthorized: true
@@ -895,10 +895,23 @@ swell.Responder = (function() {
     if (!this.collection) {
       return callback('[swell] A collection must specified to use REST features');
     }
-    return this.collection.update(req.body, callback);
+    return this.collection.update(req.body, function(err, res) {
+      var data;
+      if (err) return callback(err);
+      data = {
+        type: 'saved',
+        res: [res],
+        emit: {
+          event: _this.collection.store,
+          space: _this.config.server.socket_io.namespace
+        }
+      };
+      return callback(null, data);
+    });
   };
 
   Responder.prototype["delete"] = function(req, callback) {
+    var _this = this;
     if (!this.expose_rest) {
       return callback(null, {
         unauthorized: true
@@ -907,7 +920,19 @@ swell.Responder = (function() {
     if (!this.collection) {
       return callback('[swell] A collection must specified to use REST features');
     }
-    return this.collection.remove(req.body, callback);
+    return this.collection.remove(req.body, function(err, res) {
+      var data;
+      if (err) return callback(err);
+      data = {
+        type: 'removed',
+        res: [res],
+        emit: {
+          event: _this.collection.store,
+          space: _this.config.server.socket_io.namespace
+        }
+      };
+      return callback(null, data);
+    });
   };
 
   Responder.prototype.cookie = function(name, value, options) {
@@ -942,7 +967,7 @@ swell.Responder = (function() {
       sort = this.collection.sort_by ? this.collection.sort_by : 'sort_order';
       update[sort] = obj;
       results.push(update);
-      this.collection.update(update, false);
+      this.collection.update(update, function() {});
     }
     data = {
       type: 'sort',
@@ -1013,7 +1038,8 @@ models.Example = (function() {
   Example.prototype.defaults = {
     name: 'Swell Example Model',
     color: 'cc0000',
-    length: '12'
+    length: '12',
+    sort_order: 5000
   };
 
   return Example;
@@ -1057,7 +1083,7 @@ collections.Examples = (function() {
 
   Examples.prototype.url = '/examples/';
 
-  Examples.prototype.resource = 'mysql-swell';
+  Examples.prototype.resource = 'mongo-example';
 
   Examples.prototype.store = 'examples';
 

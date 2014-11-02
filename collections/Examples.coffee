@@ -12,8 +12,8 @@ class Examples extends swell.Collection
   url: '/examples/'
   
   # which data resource to connect to
-  resource: 'mysql-swell'
-  # resource: 'mongo-example'
+  #resource: 'mysql-swell'
+  resource: 'mongo-example'
   
   # which nosql store or rdb table to use
   store: 'examples'

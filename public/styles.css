@@ -460,7 +460,7 @@ aside {
   position: fixed;
   top: 0;
   width: 160px;
-  background: #fff;
+  background: #353535;
   height: 100%;
   overflow: hidden;
 }
@@ -484,14 +484,18 @@ aside ul li ul {
 aside ul li ul li a {
   font-size: 12px;
 }
+aside ul li a {
+  color: #eee;
+}
 aside ul li a.selected {
   font-weight: bold;
+  color: #fff;
 }
 aside ul li a.selected + ul {
   display: block;
 }
 aside ul li a.selected + ul li a {
-  color: #00468c;
+  color: #c5c5c5;
 }
 aside ul li a.selected + ul li a:hover {
   color: #d88f2a;

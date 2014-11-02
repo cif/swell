@@ -57,5 +57,6 @@ class Example extends swell.Model
     name: 'Swell Example Model'
     color: 'cc0000'
     length: '12'
+    sort_order: 5000
     
     

@@ -18,7 +18,7 @@ This object could be instantiated with this code `@example_editor = new views.ex
 
 **NOTE: Files are complied in alphabetical order.**  The easy workaround is use _  e.g. `views/_helpers.coffee` to ensure that super objects that defined before object extending them at runtime. 
 
-A cleaner alternative is to use the "break out" folders with the configuration.
+A cleaner alternative is to use your configuration to "break out" folders with the configuration.
 
 *Here's an excerpt from the default [swell.json](https://github.com/cif/swell/blob/master/swell.json):*
       
@@ -50,21 +50,21 @@ A cleaner alternative is to use the "break out" folders with the configuration.
 
 ### Templating
 
-Templates are watched and compiled into a single development target `public/tmpl.js` by default. Swell comes packaged with [Dust](https://github.com/linkedin/dustjs/wiki/Dust-Tutorial) support by default. Templates can be rendered asynchronously within your application views like so:
+Swell uses [domly](https://github.com/lazd/DOMly) for client side templating. Instead of traditional string replacement domly returns references to the nodes it creates (if desired) so they can be used for fast updates. It also gives us a [huge performance boost](http://blog.lazd.net/domly-the-fast-template-system-that-clones.html). Templates are watched and compiled into a single development target `public/tmpl.js` by default. Templates can be rendered within your application views like so:
 
     class ReportView extends Backbone.View
       el:'.graph2'
       render: (context) =>
-        dust.render 'reports.chart', context, (err, res) =>
-          return console.err if err
-          @$el.html res
+        helpers.render @el, dom.reports.chart, refs, context
       ...
 
-Swell has a one liner shortcut for rendering via [swell.Helpers](/page/api.client.helpers) that supports markdown with an optional fourth argument set to `true`. Because dust's rendering function is asychronous, a final callback argument is specified in case you have to wait for the markup to be present
+By default, templates are stored in a global `dom` object. As per the namespacing rules, you can reference them using dot syntax according to directory structure. The `refs` argument will store any references to nodes created in your template by specifying a handle attribute like so:
 
-    helpers.render @el, 'reports.help', context, true
-
-##### **Deveopler Note:** As of Swell version 0.2, the dust compiler on osX 10.8 struggles with newlines in tabbed in (code blocks etc.) markdown for the initial startup/compile . Once a file has been saved, the issue seems to resolve itself.
+    <foreach data.examples>
+      <li handle="{~lb}{~lb}data.attributes._id{~rb}{~rb}" id="{~lb}{~lb}data.attributes._id{~rb}{~rb}">
+       <span style="color:#{~lb}{~lb}data.attributes.color{~rb}{~rb}">{~lb}{~lb}data.attributes.name{~rb}{~rb}</span>
+      </li>
+    </foreach>
 
 ### Dependencies
 
@@ -74,9 +74,7 @@ Swell includes a dependency manager that will concatenate vendor files to a sing
 * [Backbone](http://backbonejs.org) **~20k**
 * [jQuery](http://jquery.com) **~96k**
 * [jQueryUI](http://jqueryui.com)  **~90k** (used to support drag and drop)
-* [Dust](https://github.com/linkedin/dustjs/wiki/Dust-Tutorial) **~11k** (handlebars and others are easy to implement)
 * [Moment](http://momentjs.com/) **~28k** (an indispensible datetime wrapper)
-* [Async](https://github.com/caolan/async) **~29k** (helpful utility for avoiding long callback chains)
 * [Storage](http://www.jstorage.info/) **~31k** (a local storage wrapper for when cookie values get too long)
 
 The vendor directory can be augmented for additional client slide functionality or pared down for faster load times.

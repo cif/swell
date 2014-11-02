@@ -1,0 +1,9 @@
+<ol class="swell-list sortable">
+  <if data.examples>
+    <foreach data.examples>
+      <li handle="{{data.attributes._id}}" id="{{data.attributes._id}}"><span style="color:#{{data.attributes.color}}">{{data.attributes.name}}</span></li>
+    </foreach>  
+  <else>
+    <li class="empty">There aren't any examples!</li>
+  </if>
+</ol>

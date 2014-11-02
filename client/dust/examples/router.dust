@@ -8,8 +8,8 @@ For more information check out [BackboneJS's Router](http://backbonejs.org/#Rout
 
     class Examples extends swell.Router
     
-      title: 'Swell Client Examples'
-      collection: new collections.Examples
+      # optional title gets displayed in address bar on routing
+      title: 'Swell Client Examples'  
       routes:
         'home' : 'home'
         'router' : 'router'

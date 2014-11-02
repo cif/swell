@@ -11,9 +11,12 @@ class Router extends Backbone.Router
   # initialize simply sets the application as a property
   # implement init when subclases
   initialize: (@app) =>
-    @app.register(@)
-    @init.apply(@, arguments)
     
+    # if a collection has been specified as a string, initialize it
+    if @collection
+      @collection = helpers.string_to_prop @collection
+      @collection = new @collection()
+      
     # delegate undelegates the rest of the routers registered
     # then calls bind to delegate views of this instance
     # if a title is specified, it updates the document title
@@ -22,7 +25,9 @@ class Router extends Backbone.Router
       @app.undelegate(route)
       @delegate(route)
       $('title').text @title if @title
-      
+    
+    @app.register(@)
+    @init.apply(@, arguments)
     this
   
   # function can be used to carry out any additional

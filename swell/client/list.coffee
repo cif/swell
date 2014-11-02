@@ -6,10 +6,13 @@
 
 class List extends Backbone.View
   
+  # nodes stores references to the dom elements
+  # see client side templating in docs
+  nodes: {}
+    
   events: {}
-  
   # these are common UI events that come with the standard list
-  # obviously, you should ensure class names are in your template
+  # to make use of them ensure class names are in your template
   __events:
     'click tr,li' : 'clicked'
     'click th.sortable' : 'sort'
@@ -25,27 +28,32 @@ class List extends Backbone.View
     @init.apply(@, arguments)
     @el_str = @el  # not sure why, but view.setElement makes @el a node ref rather than string ?
     this
-    
+  
+  # these are generally implemented by sub objects    
   init: (options) ->
-    
+  
+  # these are often bound to events and also implemented on sub objects   
+  update: (model) -> console.log @nodes
+  add: (model) ->
+  remove: (model) ->
+        
   # render method takes the template, context 
   # and an optional callback, uses the helper
   render: (template, context, callback) =>
     # extend the context by properties of this object
     _.extend(context, @)
     @setElement(@el_str)
-    helpers.render @el_str, template, context, (err, res) =>
-      callback(err, res) if callback
-      $(@el_str + ' ol').sortable update:@sorted if @sortable  # make sortable if true
+    helpers.render @el_str, template, @nodes, context
+    $(@el_str + ' ol').sortable update:@sorted if @sortable  # make sortable if true
+    console.log 'wtf?', @nodes
       
-  
-      
-  # it will bubble up the target parents to tr or the li
+  # this will bubble up the target parents to tr or the li
   # so it's important that those contain the id of the object
   clicked: (e) ->
     while !(e.target.tagName is 'TR' or e.target.tagName is 'LI') 
       e.target = e.target.parentNode
     id = $(e.target).attr 'id'
+    throw new Error '[swell] ' + moment().format('HH:mm:ss') + ' Swell.List clicked() error: id attribute is not defined on the li or tr tag!' if !id
     @trigger 'clicked', id, e
       
   
@@ -55,7 +63,9 @@ class List extends Backbone.View
     ordered = {}
     $(@el_str + ' ol li').each (index) ->
       id = $(this).attr 'id'
+      throw new Error '[swell] ' + moment().format('HH:mm:ss') + ' Swell.List sorted() error: id attribute is not defined on the li tag!' if !id
       ordered[id] = index
+      
     @trigger 'sorted', ordered, e
   
   

@@ -19,8 +19,9 @@ class Collection extends Backbone.Collection
   initialize: (options) =>
 
     # if synchronize is set to true, then
-    # listen for events from the server on @store
-    synchro.on @store, @update
+    # listen for events from the server on @store,
+    # pass along to @update
+    synchro.on @store, @update if @sychronize
     
     # default callbacks for Backbone methods
     @response_callback =
@@ -40,13 +41,14 @@ class Collection extends Backbone.Collection
     this
   
   # this is the method handles socket.io updates from the server.
-  # data.res should hold an array of potential models to update
+  # data.res will hold an array of models to update, add or remove
+  # data.type is an event passed from the server and triggered
   update: (data) =>
-    return false if @models.length is 0  # ignore updates if the collection hasn't been pulled yet
-    return console.error '[swell] ' + moment().format('HH:mm:ss') + ' Collection.update recieved empty or bad data from the server:', arguments if !data or !data.res
-    for attr in data.res
-      @add attr, merge:true
-    @trigger 'updated', @
+    if data.type and data.type is 'remove'
+      @remove data.res if data.res
+    else
+      @add data.res, merge:true if data.res             
+    @trigger data.type, @ if data.type
   
   
   # a few unique swell.Collection client side 
@@ -58,8 +60,10 @@ class Collection extends Backbone.Collection
   grab: (callback) =>
     if @models.length is 0
       @pull (err, res) =>
-        callback(null, @models)
+        callback err if err
+        if res.length is 0 then callback(null, false) else callback(null, @models)
     else
+      console.log 'wtf?', @models
       callback(null, @models)
   
   # snag, is just like get but will issue a pull
@@ -72,8 +76,10 @@ class Collection extends Backbone.Collection
       callback @get(id)
       
   # pull, gets the latest collection from the server
+  # it's a fetch is silent by default
   pull: (@callback, options) =>
     options = _.extend @response_callback, options
+    options.silent = true if typeof options.silent is 'undefined'
     @operation = 'pull'
     @fetch options
   
@@ -89,12 +95,11 @@ class Collection extends Backbone.Collection
   
   # default search method will search models for attributes 
   # matching string or array second argument
-  search: (query, fields, case_sensitive) =>
-    console.log query, fields  
+  search: (query, fields, case_sensitive) =>  
     results = []
     for model in @models
       if typeof fields is 'array'
-        console.log 'fancy!'
+        console.log 'TODO!'
       else
         search = model.get(fields).toString()
         search = search.toLowerCase() if !case_sensitive

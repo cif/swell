@@ -68,7 +68,9 @@ class Collection
     cleaned = @model.sanitize(data)
     return callback('[swell] data sanitization error: ' + @model.invalid) if !cleaned
     
-    @db.update data[@model.key], cleaned, callback
+    @db.update data[@model.key], cleaned, (err, res) ->
+      callback err if err
+      callback null, cleaned
     
   # deletes a model from the database  
   remove: (data, callback) ->

@@ -7,10 +7,11 @@
 
 class Helpers
   
+  # this has stores bindings as references to DOM nodes via 
+  # the @bound method used for easy two way binding
+  bindings:{}
+  
   constructor: ->
-    
-    # extend dust.helpers so methods here are available in dust templates
-    _.extend(dust.helpers, @)
     
     # default handlers for ajax 'shortcut' (see also Model.call)
     @response_callback =
@@ -31,14 +32,20 @@ class Helpers
     $(selector).html loader
   
   # dust rendering shortcut, takes selector, template, optional markdown
-  render: (selector, template, context, callback) ->
-    dust.render template, context, (err, out) ->
-      $(selector).html out  
-      callback() if callback
+  render: (selector, template, view, context, callback) ->
+    $(selector).html ''
+    $(selector).append template.call(view, context)
   
   # changes the default timeout argument order for cleaner coffeescripting
   delay: (time, callback) ->
     window.setTimeout callback, time
+  
+  # simple string based replacement on object {prop} with val pairs
+  tmpl: (str, obj) ->
+    for prop, val of obj
+      vars = new RegExp('\{'+prop+'\}','g')
+      str = str.replace(vars, val)
+    return str  
       
   # ------------------------- form elements ---------------------------------
   checkbox: (chunk, context, bodies, params) =>
@@ -74,6 +81,7 @@ class Helpers
 
   # auto-formatting based on model attributes, dates, currency etc.
   format: (chunk, context, bodies, params) ->
+    return chunk.write '' if !params.obj[params.key]
     out = params.obj[params.key].toString()
     # currency
     if params.field.type is 'currency' and params.field.format > ''
@@ -131,3 +139,11 @@ class Helpers
     options.validate = true
     $.ajax options
   
+  # ------------------------- global helper functions ---------------------------------
+  string_to_prop: (str, delim='.') ->
+    path = str.split delim
+    obj = window
+    while path.length 
+      obj = obj[path.shift()]
+    return obj
+    

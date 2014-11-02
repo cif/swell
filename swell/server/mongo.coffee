@@ -13,8 +13,12 @@ class Mongo
     try
       @db = mongo.connect 'mongodb://'+@collection.data.host+':27017/' + @collection.data.db, [@collection.store]
     catch e
-      console.log 'caugh'
+      console.log '[swell-mongo] connection error:', e.getMessage()
     this
+  
+  # insert new records
+  insert: (object, callback) =>
+    @db[@collection.store].save object, callback
       
   # find records
   find: (options, callback) =>
@@ -23,26 +27,20 @@ class Mongo
     
   # get a single record by id  
   get: (id, callback) =>
-    callback('[swell-mongo] bad object id argument: ' + id) if !@valid_id(id)
     @db[@collection.store].findOne _id:mongo.ObjectId(id), callback
     
-  # insert new records
-  insert: (object, callback) =>
-    @db[@collection.store].save object, callback
-  
   # update existing records
-  update: (object,callback) =>
-    @db[@collection.store].save object, callback
+  # note that id is the first argument for mysql 
+  # defaults but object._id should be defined
+  update: (id, object, callback) =>
+    update = $set:{}
+    for prop, val of object
+      update.$set[prop] = val if prop != '_id'
+    @db[@collection.store].update _id:mongo.ObjectId(object._id), update, callback
   
-  # delete a record
-  destroy: (object, callback) =>
-    callback('[swell-mongo] bad object id argument: ' + id) if !@valid_id(id)
+  # delete a record, same is true for _id
+  destroy: (id, object, callback) =>
     @db[@collection.store].remove _id:mongo.ObjectId(object.id), callback
     
-  # increment / decrement
-  bump: (store, field, value, key, id, callback) =>
   
-  valid_id: (id) =>
-    id.match('^[0-9a-fA-F]{24}$')
-    
   

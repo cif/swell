@@ -28,7 +28,7 @@ The short answer is **what if that isn't what we want?**. Swell is designed so t
 
 Collections will make up the core of your app and keeping those collections in sync real-time **alleviates the classic overwriting problem** caused by simultaneous editing. 
 
-If you were paying close attention to the [server collections](/page/server#collections) section, you may have noticed the `synchronize: true` property being set in our example.  Combined with `expose_rest: true` property on your responder the following default behaviors will take place:
+If you were paying close attention to the [server collections](/page/server#collections) section, you may have noticed the `synchronize: true` property being set in our example.  Combined with an `expose_rest: true` property on your responder the following default behaviors will take place:
 
 **On the server** the responder's built-in `post`, `put`, `delete` and `sort` methods will broadcast the results of any data transactions to all connected clients.
 

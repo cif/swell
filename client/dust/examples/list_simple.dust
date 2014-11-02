@@ -1,6 +1,6 @@
 <ol class="swell-list sortable">
   {#examples}
-    <li id="{attributes._id}"><span style="color:#{attributes.color}">{attributes.name}</span></li>
+    <li id="{attributes._id}" id="{atttributes._id}"><span style="color:#{attributes.color}">{attributes.name}</span></li>
   {:else}
     <li class="empty">There aren't any examples!</li>
   {/examples}

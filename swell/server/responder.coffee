@@ -59,13 +59,29 @@ class Responder
   put: (req, callback) =>
     return callback(null, unauthorized:true) if !@expose_rest
     return callback('[swell] A collection must specified to use REST features') if !@collection
-    @collection.update req.body, callback
+    @collection.update req.body, (err, res) =>
+      return callback err if err
+      data = 
+        type: 'saved'
+        res: [res]
+        emit:
+          event: @collection.store
+          space: @config.server.socket_io.namespace
+      callback null, data
     
   delete: (req, callback) =>
     return callback(null, unauthorized:true) if !@expose_rest
     return callback('[swell] A collection must specified to use REST features') if !@collection
-    @collection.remove req.body, callback
-  
+    @collection.remove req.body, (err, res) =>
+      return callback err if err
+      data = 
+        type: 'removed'
+        res: [res]
+        emit:
+          event: @collection.store
+          space: @config.server.socket_io.namespace
+      callback null, data
+      
   # cookie serves as a getter / setter 
   # and destroyer of signed cookies
   cookie: (name, value, options={}) =>
@@ -92,7 +108,7 @@ class Responder
       update[sort] = obj
       results.push update
       
-      @collection.update(update, false)
+      @collection.update(update, ->)
   
     # because this could be a lot of query operations, 
     # we're calling back early and assuming it worked

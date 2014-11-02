@@ -1,0 +1,12 @@
+# Examples
+
+This is a simple, one-collection, single page app that demonstrates some built-in client functionality along with code examples.  
+
+This text is rendered by a method defined and called via the `home` (#home) in `client/routers/examples.coffee`. 
+
+Notice how the hashtag changes while browing these pages. 
+
+The [domly](https://github.com/lazd/DOMly) template markdown is contained in `client/dust/examples/home.dom`. 
+
+Ready? Let's get started with [swell.Router](#router)
+

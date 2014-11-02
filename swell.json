@@ -29,12 +29,12 @@
         ".coffee"
       ]
     },
-    "dust": {
-      "compiler": "dust",
-      "folders": "client/dust",
+    "domly": {
+      "compiler": "domly",
+      "folders": "client/dom",
       "output": "public/js/tmpl.js",
       "extensions": [
-        ".dust"
+        ".dom"
       ]
     },
     "style": {
@@ -61,7 +61,7 @@
       "/page/:view": "Pages.page"
     },
     "resources": {
-      "mongo-swell": {
+      "mongo-example": {
         "engine": "mongo",
         "db": "swell",
         "host": "127.0.0.1",
