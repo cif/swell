@@ -1,4 +1,4 @@
-// last compiled: 2014-10-30 19:10:03
+// last compiled: 2014-11-04 15:11:54
 
 var swell = {};
 var models = {};
@@ -262,6 +262,7 @@ swell.Helpers = (function() {
     this.ajax = __bind(this.ajax, this);
     this.falsey = __bind(this.falsey, this);
     this.checkbox = __bind(this.checkbox, this);
+    this.escape = __bind(this.escape, this);
     var _this = this;
     this.response_callback = {
       success: function(data) {
@@ -298,6 +299,10 @@ swell.Helpers = (function() {
       str = str.replace(vars, val);
     }
     return str;
+  };
+
+  Helpers.prototype.escape = function(one, two) {
+    return console.log('wahat does thsi do for me?', arguments);
   };
 
   Helpers.prototype.checkbox = function(chunk, context, bodies, params) {
@@ -449,10 +454,9 @@ swell.List = (function() {
     _.extend(context, this);
     this.setElement(this.el_str);
     helpers.render(this.el_str, template, this.nodes, context);
-    $(this.el_str + ' ol').sortable({
+    return $(this.el_str + ' ol').sortable({
       update: this.sortable ? this.sorted : void 0
     });
-    return console.log('wtf?', this.nodes);
   };
 
   List.prototype.clicked = function(e) {

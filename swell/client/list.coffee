@@ -45,7 +45,6 @@ class List extends Backbone.View
     @setElement(@el_str)
     helpers.render @el_str, template, @nodes, context
     $(@el_str + ' ol').sortable update:@sorted if @sortable  # make sortable if true
-    console.log 'wtf?', @nodes
       
   # this will bubble up the target parents to tr or the li
   # so it's important that those contain the id of the object

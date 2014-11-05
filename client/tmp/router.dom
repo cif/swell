@@ -31,7 +31,7 @@ For more information check out [BackboneJS's Router](http://backbonejs.org/#Rout
       home: =>
         # no UI events to bind on the intro 
         # so just render the home template 
-        helpers.render 'section[role=main]', dom.examples.home, {}, @app
+        helpers.render 'section[role=main]', dom.examples.home, &lcub;&rcub;, @app
     
       ...  
 

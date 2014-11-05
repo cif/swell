@@ -22,8 +22,8 @@
       fs.readFile(file, 'utf8', function(err, data){
         
         try{
-        
-          var template = dom.precompile(converter.makeHtml(data), {
+          var html = converter.makeHtml(data);
+          var template = dom.precompile(html, {
             stripWhitespace: true // Strip whitespace for better performance
           });
           var out = 'dom.' + name + ' = '+template.toString()+';'

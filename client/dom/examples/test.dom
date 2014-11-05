@@ -1,5 +1,0 @@
-<ul>
-  <forin data.stats,stat>
-    <li>{{stat}}: {{data}}</li>
-  </forin>
-</ul>

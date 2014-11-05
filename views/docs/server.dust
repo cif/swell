@@ -34,7 +34,7 @@ The modules in `server/` work together to handle the request and response flow:
   <p><b>server/socket.js</b> handles emit object broadcasts returned to render.js out() method and sends the packets to appropriately subscribed clients.</p>
 </div>
 
-### Middleware / Overrides
+### Middleware
 
 Middleware is the first stop on the request pipeline. Any route matching functions implemented in `server/middelware.js` will take priority over the default application routes. This is handy if you want to make use of **regular expression** route matching, or require more control over response handling for certain routes. 
 
@@ -47,7 +47,7 @@ Here's a simple example handling a request via regex matched route in middleware
     });
 
 
-### Routes / Mapping
+### Routes
 
 By default **routes are maped from the request URIs**. For example, a GET request to /examples/ would call `Examples.get(req, callback)` and a request to /examples/by_price/ would map to `Examples.by_price(req, callback)`.  Additional URI parts are split on / and passed as an array: `req.uri_params`
 

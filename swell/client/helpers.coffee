@@ -46,6 +46,10 @@ class Helpers
       vars = new RegExp('\{'+prop+'\}','g')
       str = str.replace(vars, val)
     return str  
+  
+  # domly escape helper
+  escape: (one, two) =>
+    console.log 'wahat does thsi do for me?', arguments
       
   # ------------------------- form elements ---------------------------------
   checkbox: (chunk, context, bodies, params) =>
