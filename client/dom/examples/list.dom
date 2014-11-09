@@ -1,3 +1,59 @@
-testing template:
+# swell.List examples
 
-\{\{test\}\}
+There aren't too many apps out there these days that don't have lists in one form or another. The core list object faciliates simple **click handling, drag 'n' drop reordering and sortable grid headings**.
+
+There are several default [events](/page/api.client.list#events) which [swell.List](/page/api.client.list) will broadcast when lists are interacted with.
+
+### Examples
+*Here's a simple drag and drop list example of our object names and colors:*
+<div class="simple"></div>
+<br>
+
+*Here's an example of a simple heading-sortable grid:*
+<div class="grid"></div>
+<br>
+The interactions in these two exampels are handled by the core [swell.List](/page/api.client.list) object so the router code in the previous section required is minimal but extensible. In Swell, nearly everything is **bound with events** as opposed to relying on function callbacks.
+
+*Here's the code that renders both the sortable list and the grid:*
+      
+      ...
+      list: =>
+
+        helpers.render 'section[role=main]',dom.examples.list, \{\}, @app
+    
+        # we have to delegate here, because DOM nodes
+        # aren't rendered initially in our example
+        @delegate()
+    
+        helpers.loader '.simple,.grid'
+        examples.grab (err, models) =>
+          @list.render dom.examples.list_simple, examples: models
+          @grid.render dom.examples.list_grid, examples: models
+      
+          # highlights code examples
+          $('pre code').each (i, block) -> hljs.highlightBlock(block)
+      ...
+
+### Templating Lists
+
+These lists in the examples are rendered by passing a context and handle holder object to a precompiled [Domly](https://github.com/lazd/DOMly) template. In our simple first case, that template is `client/dust/examples/list_simple.dom`
+
+Here's the code that makes up our simple example with absolutely no frills:
+
+<pre><code>
+ &lt;ol class=&quot;swell-list sortable&quot;&gt;
+    &lt;if data.examples&gt;
+      &lt;foreach data.examples&gt;
+        &lt;li handle=&quot;\{\{data.attributes._id\}\}&quot; id=&quot;\{\{data.attributes._id\}\}&quot;&gt;&lt;span style=&quot;color:#\{\{data.attributes.color\}\}&quot;&gt;\{\{data.attributes.name\}\}&lt;/span&gt;&lt;/li&gt;
+      &lt;/foreach&gt;  
+    &lt;else&gt;
+      &lt;li class=&quot;empty&quot;&gt;There aren&apos;t any examples!&lt;/li&gt;
+    &lt;/if&gt;
+  &lt;/ol&gt;  
+</code></pre>  
+
+Here's the dust that makes our grid. Note the use of a few custom helpers defined in [swell.Helpers](/page/api.client.helpers) :
+
+<pre><code>
+ asdfsadf
+</code></pre>  

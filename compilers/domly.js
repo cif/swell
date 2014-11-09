@@ -25,6 +25,7 @@
           var html = converter.makeHtml(data);
           var template = dom.precompile(html, {
             stripWhitespace: true // Strip whitespace for better performance
+            //debug:true
           });
           var out = 'dom.' + name + ' = '+template.toString()+';'
           callback(null, out);
